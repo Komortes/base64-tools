@@ -18,7 +18,6 @@ interface DataUrlPreviewState {
 
 export function DataUrlToolsPage() {
   const [input, setInput] = useState('')
-  const [status, setStatus] = useState('')
   const [error, setError] = useState('')
   const [previewState, setPreviewState] = useState<DataUrlPreviewState | null>(null)
   const activeObjectUrlRef = useRef<string | null>(null)
@@ -113,8 +112,7 @@ export function DataUrlToolsPage() {
       return
     }
 
-    const ok = await copyToClipboard(parsed.payload)
-    setStatus(ok ? 'Payload copied.' : 'Copy failed.')
+    await copyToClipboard(parsed.payload)
   }
 
   const handleDownload = () => {
@@ -127,14 +125,12 @@ export function DataUrlToolsPage() {
 
     if (parsed.isBase64 && previewState.blob) {
       triggerDownload(previewState.blob, `data-url-payload.${previewState.extension}`)
-      setStatus('Payload downloaded.')
       return
     }
 
     const text = decodeDataUrlTextPayload(parsed.payload)
     const blob = new Blob([text], { type: previewState.mime || 'text/plain;charset=utf-8' })
     triggerDownload(blob, `data-url-text.${previewState.extension}`)
-    setStatus('Text payload downloaded.')
   }
 
   return (
@@ -180,7 +176,6 @@ export function DataUrlToolsPage() {
       )}
 
       {error && <p className="message error">{error}</p>}
-      {!error && status && <p className="message success">{status}</p>}
     </section>
   )
 }

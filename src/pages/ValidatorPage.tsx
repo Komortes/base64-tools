@@ -5,13 +5,11 @@ import { copyToClipboard } from '../utils/clipboard'
 export function ValidatorPage() {
   const [input, setInput] = useState('')
   const [stripWhitespace, setStripWhitespace] = useState(true)
-  const [copyStatus, setCopyStatus] = useState('')
 
   const result = useMemo(() => validateBase64(input, stripWhitespace), [input, stripWhitespace])
 
   const copyNormalized = async () => {
-    const ok = await copyToClipboard(result.normalized)
-    setCopyStatus(ok ? 'Normalized value copied.' : 'Copy failed.')
+    await copyToClipboard(result.normalized)
   }
 
   return (
@@ -54,8 +52,6 @@ export function ValidatorPage() {
           <div className="button-row">
             <button onClick={copyNormalized}>Copy normalized</button>
           </div>
-
-          {copyStatus && <p className="message success">{copyStatus}</p>}
 
           {result.errors.length > 0 && (
             <div>

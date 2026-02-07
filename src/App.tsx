@@ -1,11 +1,8 @@
-import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router'
-import { ConverterPage } from './pages/ConverterPage'
+import { Navigate, NavLink, Route, Routes } from 'react-router'
 import { DataUrlToolsPage } from './pages/DataUrlToolsPage'
-import { DecodeFilePage } from './pages/DecodeFilePage'
-import { DecodeImagePage } from './pages/DecodeImagePage'
+import { DecodersPage } from './pages/DecodersPage'
 import { EncodersPage } from './pages/EncodersPage'
 import { OverviewPage } from './pages/OverviewPage'
-import { SmartDecodePage } from './pages/SmartDecodePage'
 import { ValidatorPage } from './pages/ValidatorPage'
 
 const navSections = [
@@ -13,16 +10,8 @@ const navSections = [
     title: 'Workspace',
     items: [
       { to: '/overview', label: 'Overview' },
-      { to: '/converter', label: 'Converter' },
       { to: '/encoders', label: 'Encoders' },
-      { to: '/tools/smart-decode', label: 'Smart Decode' },
-    ],
-  },
-  {
-    title: 'Decode',
-    items: [
-      { to: '/decode/image', label: 'Decode Image' },
-      { to: '/decode/file', label: 'Decode File' },
+      { to: '/decoders', label: 'Decoders' },
     ],
   },
   {
@@ -34,28 +23,21 @@ const navSections = [
   },
 ]
 
-const pageTitleMap: Record<string, string> = {
-  '/overview': 'Overview',
-  '/converter': 'Text Converter',
-  '/encoders': 'Encoders',
-  '/tools/smart-decode': 'Smart Decode',
-  '/decode/image': 'Image Decoder',
-  '/decode/file': 'File Decoder',
-  '/tools/data-url': 'Data URL Utilities',
-  '/tools/validator': 'Base64 Validator',
-}
-
 function App() {
-  const location = useLocation()
-  const currentTitle = pageTitleMap[location.pathname] ?? 'Base64 Tools'
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-block">
           <p className="eyebrow">Local-first toolkit</p>
-          <h1>Base64 Tools</h1>
-          <p className="brand-note">No backend. No upload. No hidden processing.</p>
+          <h1>
+            <span className="brand-title">Base64 Tools</span>
+            <span className="brand-loop-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12a8 8 0 10-2.3 5.7" />
+                <path d="M20 7v5h-5" />
+              </svg>
+            </span>
+          </h1>
         </div>
 
         {navSections.map((section) => (
@@ -82,20 +64,16 @@ function App() {
       </aside>
 
       <div className="workspace">
-        <header className="workspace-head">
-          <p className="workspace-kicker">Current tool</p>
-          <h2>{currentTitle}</h2>
-        </header>
-
         <main className="page-wrap">
           <Routes>
             <Route path="/" element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewPage />} />
-            <Route path="/converter" element={<ConverterPage />} />
             <Route path="/encoders" element={<EncodersPage />} />
-            <Route path="/tools/smart-decode" element={<SmartDecodePage />} />
-            <Route path="/decode/image" element={<DecodeImagePage />} />
-            <Route path="/decode/file" element={<DecodeFilePage />} />
+            <Route path="/decoders" element={<DecodersPage />} />
+            <Route path="/decode/smart" element={<Navigate to="/decoders" replace />} />
+            <Route path="/tools/smart-decode" element={<Navigate to="/decoders" replace />} />
+            <Route path="/decode/image" element={<Navigate to="/decoders" replace />} />
+            <Route path="/decode/file" element={<Navigate to="/decoders" replace />} />
             <Route path="/tools/data-url" element={<DataUrlToolsPage />} />
             <Route path="/tools/validator" element={<ValidatorPage />} />
             <Route path="*" element={<Navigate to="/overview" replace />} />

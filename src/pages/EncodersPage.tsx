@@ -1,15 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { DecodedPreview } from '../components/DecodedPreview'
+import { useMemo, useState } from 'react'
+import { ToolTypeIcon } from '../components/ToolTypeIcon'
 import { bytesToBase64 } from '../utils/base64'
-import { bytesToSize, triggerDownload, tryTextPreview } from '../utils/blob'
+import { bytesToSize, triggerDownload } from '../utils/blob'
 import { copyToClipboard } from '../utils/clipboard'
-import { decodeInputToBytes } from '../utils/decoder'
-import {
-  detectFileType,
-  type FileTypeResult,
-  type PreviewKind,
-} from '../utils/fileType'
-import { bytesToHex, hexToBytes } from '../utils/hex'
+import { hexToBytes } from '../utils/hex'
 
 type EncoderKind =
   | 'audio'
@@ -29,30 +23,37 @@ interface EncoderConfig {
   mode: 'file' | 'text' | 'hex'
   accept?: string
   defaultMime: string
-  previewKind: PreviewKind
   placeholder: string
-  extension: string
 }
 
-interface DecodeResult {
-  blob: Blob
-  objectUrl?: string
-  previewKind: PreviewKind
-  mime: string
-  sizeBytes: number
-  filename: string
-  textPreview: string | null
+type FileInputMode = 'local' | 'url'
+
+function filenameFromUrl(input: string, fallbackBase: string, fallbackExt: string): string {
+  try {
+    const url = new URL(input)
+    const pathPart = url.pathname.split('/').filter(Boolean).pop()
+    if (pathPart && pathPart.includes('.')) {
+      return decodeURIComponent(pathPart)
+    }
+
+    if (pathPart) {
+      return `${decodeURIComponent(pathPart)}.${fallbackExt}`
+    }
+  } catch {
+    // Ignore malformed URL and use fallback.
+  }
+
+  return `${fallbackBase}.${fallbackExt}`
 }
 
-const ENCODER_CONFIGS: EncoderConfig[] = [
+const ENCODER_CONFIGS: Array<EncoderConfig & { extension: string }> = [
   {
     kind: 'audio',
     label: 'Audio to Base64',
     mode: 'file',
     accept: 'audio/*,.mp3,.wav,.ogg,.m4a,.flac',
     defaultMime: 'audio/mpeg',
-    previewKind: 'audio',
-    placeholder: 'Upload audio file to encode.',
+    placeholder: 'Upload audio file or load by URL.',
     extension: 'mp3',
   },
   {
@@ -60,8 +61,7 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     label: 'CSS to Base64',
     mode: 'text',
     defaultMime: 'text/css;charset=utf-8',
-    previewKind: 'text',
-    placeholder: 'Paste CSS code here.',
+    placeholder: 'Paste CSS code.',
     extension: 'css',
   },
   {
@@ -70,8 +70,7 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     mode: 'file',
     accept: '*/*',
     defaultMime: 'application/octet-stream',
-    previewKind: 'none',
-    placeholder: 'Upload any file to encode.',
+    placeholder: 'Upload any file or load by URL.',
     extension: 'bin',
   },
   {
@@ -79,8 +78,7 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     label: 'Hex to Base64',
     mode: 'hex',
     defaultMime: 'application/octet-stream',
-    previewKind: 'text',
-    placeholder: 'Paste hex string. Example: 48656c6c6f or 48 65 6c 6c 6f',
+    placeholder: 'Paste hex string, e.g. 48 65 6c 6c 6f',
     extension: 'hex',
   },
   {
@@ -88,7 +86,6 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     label: 'HTML to Base64',
     mode: 'text',
     defaultMime: 'text/html;charset=utf-8',
-    previewKind: 'text',
     placeholder: 'Paste HTML markup.',
     extension: 'html',
   },
@@ -98,8 +95,7 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     mode: 'file',
     accept: 'image/*,.png,.jpg,.jpeg,.gif,.webp,.svg',
     defaultMime: 'image/png',
-    previewKind: 'image',
-    placeholder: 'Upload image file.',
+    placeholder: 'Upload image file or load by URL.',
     extension: 'png',
   },
   {
@@ -108,8 +104,7 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     mode: 'file',
     accept: '.pdf,application/pdf',
     defaultMime: 'application/pdf',
-    previewKind: 'pdf',
-    placeholder: 'Upload PDF file.',
+    placeholder: 'Upload PDF file or load by URL.',
     extension: 'pdf',
   },
   {
@@ -117,7 +112,6 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     label: 'Text to Base64',
     mode: 'text',
     defaultMime: 'text/plain;charset=utf-8',
-    previewKind: 'text',
     placeholder: 'Paste plain text.',
     extension: 'txt',
   },
@@ -126,7 +120,6 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     label: 'URL to Base64',
     mode: 'text',
     defaultMime: 'text/plain;charset=utf-8',
-    previewKind: 'text',
     placeholder: 'Paste URL, e.g. https://example.com/path?q=1',
     extension: 'txt',
   },
@@ -136,45 +129,22 @@ const ENCODER_CONFIGS: EncoderConfig[] = [
     mode: 'file',
     accept: 'video/*,.mp4,.webm,.mov,.mkv',
     defaultMime: 'video/mp4',
-    previewKind: 'video',
-    placeholder: 'Upload video file.',
+    placeholder: 'Upload video file or load by URL.',
     extension: 'mp4',
   },
 ]
-
-function expectedKindMatches(config: EncoderConfig, detected: FileTypeResult): boolean {
-  if (config.kind === 'file') {
-    return true
-  }
-
-  if (config.previewKind === 'none') {
-    return true
-  }
-
-  return detected.previewKind === config.previewKind
-}
-
-function modeHelpText(config: EncoderConfig): string {
-  if (config.mode === 'file') {
-    return 'Input mode: upload file'
-  }
-
-  if (config.mode === 'hex') {
-    return 'Input mode: hex string'
-  }
-
-  return 'Input mode: text'
-}
 
 export function EncodersPage() {
   const [kind, setKind] = useState<EncoderKind>('text')
   const [textInput, setTextInput] = useState('')
   const [hexInput, setHexInput] = useState('')
+  const [fileInputMode, setFileInputMode] = useState<FileInputMode>('local')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [base64Input, setBase64Input] = useState('')
-  const [result, setResult] = useState<DecodeResult | null>(null)
+  const [remoteFileUrl, setRemoteFileUrl] = useState('')
+  const [loadingRemoteFile, setLoadingRemoteFile] = useState(false)
+  const [isEncoding, setIsEncoding] = useState(false)
+  const [base64Output, setBase64Output] = useState('')
   const [withDataUrlPrefix, setWithDataUrlPrefix] = useState(false)
-  const [status, setStatus] = useState('')
   const [error, setError] = useState('')
 
   const config = useMemo(
@@ -182,49 +152,83 @@ export function EncodersPage() {
     [kind],
   )
 
-  useEffect(() => {
-    return () => {
-      if (result?.objectUrl) {
-        URL.revokeObjectURL(result.objectUrl)
-      }
-    }
-  }, [result?.objectUrl])
-
   const resetMessages = () => {
-    setStatus('')
     setError('')
   }
 
   const handleTypeChange = (nextType: EncoderKind) => {
-    if (result?.objectUrl) {
-      URL.revokeObjectURL(result.objectUrl)
-    }
-
     setKind(nextType)
     setTextInput('')
     setHexInput('')
+    setFileInputMode('local')
     setSelectedFile(null)
-    setBase64Input('')
-    setResult(null)
+    setRemoteFileUrl('')
+    setLoadingRemoteFile(false)
+    setBase64Output('')
     resetMessages()
+  }
+
+  const handleLoadFromUrl = async () => {
+    resetMessages()
+
+    if (!remoteFileUrl.trim()) {
+      setError('Enter a file URL first.')
+      return
+    }
+
+    if (config.mode !== 'file') {
+      setError('URL loading is available only for file-based encoders.')
+      return
+    }
+
+    setLoadingRemoteFile(true)
+
+    try {
+      const response = await fetch(remoteFileUrl.trim())
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}.`)
+      }
+
+      const blob = await response.blob()
+      const fallbackName = `remote-${kind}`
+      const guessedName = filenameFromUrl(remoteFileUrl.trim(), fallbackName, config.extension)
+      const mime = blob.type || config.defaultMime
+      const file = new File([blob], guessedName, { type: mime })
+      setSelectedFile(file)
+    } catch (loadError) {
+      const message =
+        loadError instanceof Error
+          ? loadError.message
+          : 'Failed to load file from URL.'
+      setError(`Cannot load by URL. ${message} This can fail if CORS is blocked.`)
+    } finally {
+      setLoadingRemoteFile(false)
+    }
   }
 
   const handleEncode = async () => {
     resetMessages()
+
+    if (config.mode === 'file' && !selectedFile) {
+      setError('Choose a file before encoding.')
+      return
+    }
+
+    setIsEncoding(true)
 
     try {
       let bytes: Uint8Array
       let mime = config.defaultMime
 
       if (config.mode === 'file') {
-        if (!selectedFile) {
-          setError('Choose a file before encoding.')
-          return
+        const fileToEncode = selectedFile
+        if (!fileToEncode) {
+          throw new Error('Choose a file before encoding.')
         }
 
-        bytes = new Uint8Array(await selectedFile.arrayBuffer())
-        if (selectedFile.type) {
-          mime = selectedFile.type
+        bytes = new Uint8Array(await fileToEncode.arrayBuffer())
+        if (fileToEncode.type) {
+          mime = fileToEncode.type
         }
       } else if (config.mode === 'hex') {
         bytes = hexToBytes(hexInput)
@@ -234,92 +238,38 @@ export function EncodersPage() {
 
       const encoded = bytesToBase64(bytes)
       const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
-      setBase64Input(output)
-      setStatus('Encoded to Base64.')
+      setBase64Output(output)
     } catch (encodeError) {
       const message = encodeError instanceof Error ? encodeError.message : 'Encode failed.'
       setError(message)
-    }
-  }
-
-  const handleDecode = async () => {
-    resetMessages()
-
-    if (result?.objectUrl) {
-      URL.revokeObjectURL(result.objectUrl)
-    }
-
-    setResult(null)
-
-    try {
-      const decoded = decodeInputToBytes(base64Input)
-      const detected = detectFileType(decoded.bytes, decoded.hintedMime)
-      let mime = config.defaultMime
-      let previewKind: PreviewKind = config.previewKind
-      let extension = config.extension
-
-      if (kind === 'file') {
-        mime = detected.mime
-        previewKind = detected.previewKind
-        extension = detected.extension
-      } else if (config.mode === 'file') {
-        if (expectedKindMatches(config, detected)) {
-          mime = detected.mime
-          extension = detected.extension
-          previewKind = detected.previewKind
-        }
-      } else if (kind === 'hex') {
-        previewKind = 'text'
-      }
-
-      let textPreview: string | null = null
-      let blob: Blob
-      let objectUrl: string | undefined
-
-      if (kind === 'hex') {
-        const hexText = bytesToHex(decoded.bytes)
-        textPreview = hexText
-        blob = new Blob([hexText], { type: 'text/plain;charset=utf-8' })
-      } else if (config.mode === 'text') {
-        const decodedText = new TextDecoder('utf-8', { fatal: false }).decode(decoded.bytes)
-        textPreview = decodedText
-        blob = new Blob([decodedText], { type: mime })
-      } else {
-        blob = new Blob([new Uint8Array(decoded.bytes)], { type: mime })
-        objectUrl = URL.createObjectURL(blob)
-        if (previewKind === 'text') {
-          textPreview = await tryTextPreview(blob)
-        }
-      }
-
-      setResult({
-        blob,
-        objectUrl,
-        previewKind,
-        mime,
-        sizeBytes: decoded.bytes.length,
-        filename: `decoded-${kind}.${extension}`,
-        textPreview,
-      })
-      setStatus('Decoded from Base64.')
-    } catch (decodeError) {
-      const message = decodeError instanceof Error ? decodeError.message : 'Decode failed.'
-      setError(message)
+    } finally {
+      setIsEncoding(false)
     }
   }
 
   const copyBase64 = async () => {
-    const ok = await copyToClipboard(base64Input)
-    setStatus(ok ? 'Base64 copied.' : 'Copy failed.')
+    await copyToClipboard(base64Output)
+  }
+
+  const downloadBase64 = () => {
+    const blob = new Blob([base64Output], { type: 'text/plain;charset=utf-8' })
+    triggerDownload(blob, `${kind}-base64.txt`)
+  }
+
+  const clearAll = () => {
+    setTextInput('')
+    setHexInput('')
+    setSelectedFile(null)
+    setRemoteFileUrl('')
+    setBase64Output('')
+    resetMessages()
   }
 
   return (
     <section className="tool-panel">
       <div className="panel-head">
         <h2>Encoders</h2>
-        <p>
-          Two-way conversion for Audio, CSS, File, Hex, HTML, Image, PDF, Text, URL and Video.
-        </p>
+        <p>Encode source data to Base64. Decoding is now available on the Decoders page.</p>
       </div>
 
       <div className="encoder-type-grid">
@@ -330,103 +280,158 @@ export function EncodersPage() {
             onClick={() => handleTypeChange(entry.kind)}
             className={`mode-pill${kind === entry.kind ? ' is-active' : ''}`}
           >
-            {entry.label}
+            <span className="mode-pill-inner">
+              <ToolTypeIcon kind={entry.kind} />
+              <span>{entry.label}</span>
+            </span>
           </button>
         ))}
       </div>
 
-      <p className="field-label">{modeHelpText(config)}</p>
+      <article className="preview-card source-card">
+        <h3>Source</h3>
 
-      {config.mode === 'file' && (
-        <div className="preview-card">
-          <p>{config.placeholder}</p>
-          <input
-            type="file"
-            accept={config.accept}
-            onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+        {config.mode === 'file' && (
+          <div className="upload-source-grid">
+            <div className="source-mode-toggle" role="tablist" aria-label="File source mode">
+              <button
+                type="button"
+                className={`source-mode-button${fileInputMode === 'local' ? ' is-active' : ''}`}
+                onClick={() => setFileInputMode('local')}
+              >
+                Local file
+              </button>
+              <button
+                type="button"
+                className={`source-mode-button${fileInputMode === 'url' ? ' is-active' : ''}`}
+                onClick={() => setFileInputMode('url')}
+              >
+                File URL
+              </button>
+            </div>
+
+            <section className="upload-source-block">
+              {fileInputMode === 'local' ? (
+                <>
+                  <label className="field-label" htmlFor="local-file-input">Local file</label>
+                  <input
+                    id="local-file-input"
+                    type="file"
+                    accept={config.accept}
+                    onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                  />
+                </>
+              ) : (
+                <>
+                  <label className="field-label" htmlFor="remote-file-url">File URL</label>
+                  <div className="url-load-row">
+                    <input
+                      id="remote-file-url"
+                      type="url"
+                      value={remoteFileUrl}
+                      onChange={(event) => setRemoteFileUrl(event.target.value)}
+                      placeholder="https://example.com/file.pdf"
+                    />
+                    <button
+                      type="button"
+                      className="button-ghost"
+                      onClick={handleLoadFromUrl}
+                      disabled={loadingRemoteFile || isEncoding}
+                    >
+                      {loadingRemoteFile ? 'Loading...' : 'Load'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </section>
+          </div>
+        )}
+
+        {config.mode === 'text' && (
+          <textarea
+            value={textInput}
+            onChange={(event) => setTextInput(event.target.value)}
+            rows={10}
+            placeholder={config.placeholder}
           />
+        )}
+
+        {config.mode === 'hex' && (
+          <textarea
+            value={hexInput}
+            onChange={(event) => setHexInput(event.target.value)}
+            rows={10}
+            placeholder={config.placeholder}
+          />
+        )}
+
+        {config.mode === 'file' && (
           <p className="field-label">
             {selectedFile
               ? `Selected: ${selectedFile.name} (${bytesToSize(selectedFile.size)})`
               : 'No file selected'}
           </p>
+        )}
+
+        <div className="toggle-row">
+          <button
+            type="button"
+            className={`toggle-chip${withDataUrlPrefix ? ' is-active' : ''}`}
+            aria-pressed={withDataUrlPrefix}
+            onClick={() => setWithDataUrlPrefix((prev) => !prev)}
+          >
+            <span>Include data URL prefix</span>
+            <span
+              className={`toggle-chip-indicator${withDataUrlPrefix ? ' is-active' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
         </div>
-      )}
 
-      {config.mode === 'text' && (
+        <div className="button-row">
+          <button onClick={handleEncode} disabled={isEncoding || loadingRemoteFile}>
+            Encode to Base64
+          </button>
+          <button
+            type="button"
+            className="button-ghost"
+            onClick={clearAll}
+            disabled={isEncoding || loadingRemoteFile}
+          >
+            Clear
+          </button>
+        </div>
+
+        {(loadingRemoteFile || isEncoding) && (
+          <div className="inline-loader" role="status" aria-live="polite">
+            <span className="spinner" />
+            <span>{loadingRemoteFile ? 'Loading file from URL...' : 'Encoding...'}</span>
+          </div>
+        )}
+      </article>
+
+      <article className="output-block output-card">
+        <h3>Base64 Output</h3>
         <textarea
-          value={textInput}
-          onChange={(event) => setTextInput(event.target.value)}
-          rows={7}
-          placeholder={config.placeholder}
-        />
-      )}
-
-      {config.mode === 'hex' && (
-        <textarea
-          value={hexInput}
-          onChange={(event) => setHexInput(event.target.value)}
-          rows={7}
-          placeholder={config.placeholder}
-        />
-      )}
-
-      <label>
-        <input
-          type="checkbox"
-          checked={withDataUrlPrefix}
-          onChange={(event) => setWithDataUrlPrefix(event.target.checked)}
-        />
-        Include data URL prefix when encoding
-      </label>
-
-      <div className="button-row">
-        <button onClick={handleEncode}>Encode → Base64</button>
-      </div>
-
-      <div className="output-block">
-        <label className="field-label" htmlFor="encoders-base64">Base64 (or Data URL)</label>
-        <textarea
-          id="encoders-base64"
-          value={base64Input}
-          onChange={(event) => setBase64Input(event.target.value)}
-          rows={8}
-          placeholder="Base64 output/input"
+          value={base64Output}
+          onChange={(event) => setBase64Output(event.target.value)}
+          rows={16}
+          placeholder="Encoded Base64 will appear here"
         />
         <div className="button-row">
-          <button onClick={handleDecode}>Decode ← Base64</button>
-          <button className="button-ghost" onClick={copyBase64}>Copy Base64</button>
+          <button onClick={copyBase64} disabled={!base64Output}>Copy Base64</button>
+          <button
+            type="button"
+            className="button-ghost"
+            onClick={downloadBase64}
+            disabled={!base64Output}
+          >
+            Download Base64
+          </button>
         </div>
-      </div>
+      </article>
 
       {error && <p className="message error">{error}</p>}
-      {!error && status && <p className="message success">{status}</p>}
-
-      {result && (
-        <div className="preview-card">
-          <div className="meta-grid">
-            <p><strong>MIME:</strong> {result.mime}</p>
-            <p><strong>Size:</strong> {bytesToSize(result.sizeBytes)}</p>
-            <p><strong>Preview:</strong> {result.previewKind}</p>
-          </div>
-
-          {kind === 'url' && result.textPreview && (
-            <p className="link-preview">
-              Parsed URL: <a href={result.textPreview} target="_blank" rel="noreferrer">{result.textPreview}</a>
-            </p>
-          )}
-
-          <DecodedPreview
-            previewKind={result.previewKind}
-            objectUrl={result.objectUrl}
-            textPreview={result.textPreview}
-          />
-
-          <div className="button-row">
-            <button onClick={() => triggerDownload(result.blob, result.filename)}>Download decoded</button>
-          </div>
-        </div>
-      )}
     </section>
   )
 }
