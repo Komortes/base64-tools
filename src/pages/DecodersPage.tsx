@@ -1,34 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ToolTypeIcon } from '../components/ToolTypeIcon'
+import { useState } from 'react'
+import { ModeSelector } from '../components/codec/ModeSelector'
 import { DecodedPreview } from '../components/DecodedPreview'
+import { DECODER_CONFIGS, type DecoderKind } from '../configs/decoders'
 import { bytesToSize, triggerDownload, tryTextPreview } from '../utils/blob'
 import { copyToClipboard } from '../utils/clipboard'
+import { expectedPreviewForConfig, kindFromPreview } from '../utils/decoderMode'
 import { decodeInputToBytes, type InputMode } from '../utils/decoder'
+import { useObjectUrlLifecycle } from '../hooks/useObjectUrlLifecycle'
 import { detectFileType, type PreviewKind } from '../utils/fileType'
 import { bytesToHex } from '../utils/hex'
-
-type DecoderKind =
-  | 'auto'
-  | 'audio'
-  | 'css'
-  | 'file'
-  | 'hex'
-  | 'html'
-  | 'image'
-  | 'pdf'
-  | 'text'
-  | 'url'
-  | 'video'
-
-interface DecoderConfig {
-  kind: DecoderKind
-  label: string
-  mode: 'auto' | 'detected' | 'binary' | 'text' | 'hex'
-  expectedPreview?: PreviewKind
-  defaultMime: string
-  extension: string
-  description: string
-}
 
 interface DecodeResult {
   blob: Blob
@@ -48,101 +28,6 @@ interface DecodeMismatchWarning {
   suggestedKind: DecoderKind
   suggestedLabel: string
 }
-
-const DECODER_CONFIGS: DecoderConfig[] = [
-  {
-    kind: 'auto',
-    label: 'Auto Decode',
-    mode: 'auto',
-    defaultMime: 'application/octet-stream',
-    extension: 'bin',
-    description: 'Automatically detects payload type and best preview.',
-  },
-  {
-    kind: 'image',
-    label: 'Image Decoder',
-    mode: 'binary',
-    expectedPreview: 'image',
-    defaultMime: 'image/png',
-    extension: 'png',
-    description: 'Decode to image. If unknown, force image output.',
-  },
-  {
-    kind: 'file',
-    label: 'File Decoder',
-    mode: 'detected',
-    defaultMime: 'application/octet-stream',
-    extension: 'bin',
-    description: 'Decode any payload as file with detected MIME.',
-  },
-  {
-    kind: 'pdf',
-    label: 'PDF Decoder',
-    mode: 'binary',
-    expectedPreview: 'pdf',
-    defaultMime: 'application/pdf',
-    extension: 'pdf',
-    description: 'Decode to PDF with embedded preview.',
-  },
-  {
-    kind: 'audio',
-    label: 'Audio Decoder',
-    mode: 'binary',
-    expectedPreview: 'audio',
-    defaultMime: 'audio/mpeg',
-    extension: 'mp3',
-    description: 'Decode to audio file and listen in browser.',
-  },
-  {
-    kind: 'video',
-    label: 'Video Decoder',
-    mode: 'binary',
-    expectedPreview: 'video',
-    defaultMime: 'video/mp4',
-    extension: 'mp4',
-    description: 'Decode to video file and preview in browser.',
-  },
-  {
-    kind: 'text',
-    label: 'Text Decoder',
-    mode: 'text',
-    defaultMime: 'text/plain;charset=utf-8',
-    extension: 'txt',
-    description: 'Decode UTF-8 text from Base64 or data URL.',
-  },
-  {
-    kind: 'html',
-    label: 'HTML Decoder',
-    mode: 'text',
-    defaultMime: 'text/html;charset=utf-8',
-    extension: 'html',
-    description: 'Decode HTML source.',
-  },
-  {
-    kind: 'css',
-    label: 'CSS Decoder',
-    mode: 'text',
-    defaultMime: 'text/css;charset=utf-8',
-    extension: 'css',
-    description: 'Decode CSS text source.',
-  },
-  {
-    kind: 'url',
-    label: 'URL Decoder',
-    mode: 'text',
-    defaultMime: 'text/plain;charset=utf-8',
-    extension: 'txt',
-    description: 'Decode and inspect URL value.',
-  },
-  {
-    kind: 'hex',
-    label: 'Hex Decoder',
-    mode: 'hex',
-    defaultMime: 'text/plain;charset=utf-8',
-    extension: 'txt',
-    description: 'Decode bytes and show hexadecimal representation.',
-  },
-]
 
 function inputModeLabel(mode: InputMode): string {
   if (mode === 'base64') return 'Plain Base64'
@@ -164,27 +49,6 @@ function parseUrlValue(input: string): string | null {
   }
 }
 
-function kindFromPreview(previewKind: PreviewKind): DecoderKind {
-  if (previewKind === 'image') return 'image'
-  if (previewKind === 'pdf') return 'pdf'
-  if (previewKind === 'audio') return 'audio'
-  if (previewKind === 'video') return 'video'
-  if (previewKind === 'text') return 'text'
-  return 'file'
-}
-
-function expectedPreviewForConfig(config: DecoderConfig): PreviewKind | null {
-  if (config.mode === 'binary' && config.expectedPreview) {
-    return config.expectedPreview
-  }
-
-  if (config.mode === 'text') {
-    return 'text'
-  }
-
-  return null
-}
-
 export function DecodersPage() {
   const [kind, setKind] = useState<DecoderKind>('auto')
   const [input, setInput] = useState('')
@@ -194,27 +58,16 @@ export function DecodersPage() {
   const [mismatchWarning, setMismatchWarning] = useState<DecodeMismatchWarning | null>(null)
   const [error, setError] = useState('')
 
-  const config = useMemo(
-    () => DECODER_CONFIGS.find((entry) => entry.kind === kind) ?? DECODER_CONFIGS[0],
-    [kind],
-  )
+  const { revokeObjectUrl, setObjectUrl } = useObjectUrlLifecycle()
 
-  useEffect(() => {
-    return () => {
-      if (result?.objectUrl) {
-        URL.revokeObjectURL(result.objectUrl)
-      }
-    }
-  }, [result?.objectUrl])
+  const config = DECODER_CONFIGS.find((entry) => entry.kind === kind) ?? DECODER_CONFIGS[0]
 
   const resetMessages = () => {
     setError('')
   }
 
   const handleTypeChange = (nextType: DecoderKind) => {
-    if (result?.objectUrl) {
-      URL.revokeObjectURL(result.objectUrl)
-    }
+    revokeObjectUrl()
 
     setKind(nextType)
     setResult(null)
@@ -226,9 +79,7 @@ export function DecodersPage() {
   const handleDecode = async () => {
     resetMessages()
 
-    if (result?.objectUrl) {
-      URL.revokeObjectURL(result.objectUrl)
-    }
+    revokeObjectUrl()
     setResult(null)
     setMismatchWarning(null)
     setIsDecoding(true)
@@ -262,12 +113,7 @@ export function DecodersPage() {
         detection = 'text-render'
         blob = new Blob([decodedText], { type: mime })
       } else {
-        if (config.mode === 'detected') {
-          previewKind = detected.previewKind
-          mime = detected.mime
-          extension = detected.extension
-          detection = detected.source
-        } else if (config.mode === 'auto') {
+        if (config.mode === 'detected' || config.mode === 'auto') {
           previewKind = detected.previewKind
           mime = detected.mime
           extension = detected.extension
@@ -276,6 +122,7 @@ export function DecodersPage() {
 
         blob = new Blob([new Uint8Array(decoded.bytes)], { type: mime })
         objectUrl = URL.createObjectURL(blob)
+        setObjectUrl(objectUrl)
 
         if (previewKind === 'text') {
           textPreview = await tryTextPreview(blob)
@@ -324,9 +171,7 @@ export function DecodersPage() {
   }
 
   const clearAll = () => {
-    if (result?.objectUrl) {
-      URL.revokeObjectURL(result.objectUrl)
-    }
+    revokeObjectUrl()
 
     setInput('')
     setResult(null)
@@ -343,21 +188,11 @@ export function DecodersPage() {
         <p>Decode Base64 or Data URL into files, text, media, or auto-detected payloads.</p>
       </div>
 
-      <div className="encoder-type-grid">
-        {DECODER_CONFIGS.map((entry) => (
-          <button
-            key={entry.kind}
-            type="button"
-            onClick={() => handleTypeChange(entry.kind)}
-            className={`mode-pill${kind === entry.kind ? ' is-active' : ''}`}
-          >
-            <span className="mode-pill-inner">
-              <ToolTypeIcon kind={entry.kind} />
-              <span>{entry.label}</span>
-            </span>
-          </button>
-        ))}
-      </div>
+      <ModeSelector
+        activeKind={kind}
+        items={DECODER_CONFIGS.map(({ kind: modeKind, label }) => ({ kind: modeKind, label }))}
+        onSelect={handleTypeChange}
+      />
 
       <article className="preview-card source-card">
         <h3>Input</h3>
