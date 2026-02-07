@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { ModeSelector } from '../components/codec/ModeSelector'
 import { DecodedPreview } from '../components/DecodedPreview'
 import { DECODER_CONFIGS, type DecoderKind } from '../configs/decoders'
-import { bytesToSize, triggerDownload, tryTextPreview } from '../utils/blob'
+import { bytesToSize, triggerDownload } from '../utils/blob'
 import { copyToClipboard } from '../utils/clipboard'
 import { expectedPreviewForConfig, kindFromPreview } from '../utils/decoderMode'
 import { decodeInputToBytes, type InputMode } from '../utils/decoder'
 import { useObjectUrlLifecycle } from '../hooks/useObjectUrlLifecycle'
 import { detectFileType, type PreviewKind } from '../utils/fileType'
 import { bytesToHex } from '../utils/hex'
+import { buildBinaryPreview } from '../utils/decodedPreview'
 
 interface DecodeResult {
   blob: Blob
@@ -113,6 +114,13 @@ export function DecodersPage() {
         detection = 'text-render'
         blob = new Blob([decodedText], { type: mime })
       } else {
+        const binaryPreview = await buildBinaryPreview(
+          decoded.bytes,
+          decoded.hintedMime,
+          mimeOverride,
+          detected,
+        )
+
         if (config.mode === 'detected' || config.mode === 'auto') {
           previewKind = detected.previewKind
           mime = detected.mime
@@ -120,13 +128,10 @@ export function DecodersPage() {
           detection = detected.source
         }
 
-        blob = new Blob([new Uint8Array(decoded.bytes)], { type: mime })
+        blob = binaryPreview.blob
+        textPreview = binaryPreview.textPreview
         objectUrl = URL.createObjectURL(blob)
         setObjectUrl(objectUrl)
-
-        if (previewKind === 'text') {
-          textPreview = await tryTextPreview(blob)
-        }
       }
 
       const expectedPreview = expectedPreviewForConfig(config)

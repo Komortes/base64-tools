@@ -1,0 +1,147 @@
+.app-shell {
+  width: min(1620px, 98.5vw);
+  margin: 0.85rem auto;
+  display: grid;
+  grid-template-columns: 246px minmax(0, 1fr);
+  gap: 1.2rem;
+  animation: fade-in 350ms ease;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #133f67 0%, #103454 100%);
+  color: #e7f2ff;
+  border-radius: 20px;
+  padding: 0.9rem;
+  border: 1px solid #1f5788;
+  box-shadow: 0 12px 28px rgba(11, 38, 62, 0.28);
+  position: sticky;
+  top: 1.1rem;
+  height: fit-content;
+  display: grid;
+  gap: 0.95rem;
+}
+
+.brand-block {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.brand-block h1 {
+  font-size: 1.7rem;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.brand-title {
+  line-height: 1.1;
+}
+
+.brand-loop-icon {
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: #8fd0ff;
+  animation: brand-loop 4.8s linear infinite;
+}
+
+.brand-loop-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.eyebrow {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #9ec4e6;
+}
+
+.sidebar-section {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sidebar-section h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ec4e6;
+}
+
+.sidebar-section nav {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.side-link {
+  color: #d5e8fb;
+  text-decoration: none;
+  border: 1px solid rgba(146, 189, 227, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.side-link::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(143, 208, 255, 0.8);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease;
+}
+
+.side-link:hover {
+  border-color: rgba(176, 212, 242, 0.7);
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateX(2px);
+}
+
+.side-link:hover::after {
+  transform: scaleX(1);
+}
+
+.side-link.is-active {
+  border-color: #5bb8f5;
+  background: rgba(91, 184, 245, 0.22);
+  color: #fff;
+}
+
+.privacy-card {
+  border-radius: 12px;
+  border: 1px solid rgba(159, 200, 236, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.privacy-card h3 {
+  color: #f4f9ff;
+}
+
+.privacy-card p {
+  color: #cde3f7;
+  font-size: 0.9rem;
+}
+
+.workspace {
+  min-width: 0;
+  display: grid;
+  gap: 0;
+}
+
+.page-wrap {
+  min-height: 70vh;
+}

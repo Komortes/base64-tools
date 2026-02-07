@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { DecodedPreview } from '../components/DecodedPreview'
 import { base64ToBytes } from '../utils/base64'
-import { bytesToSize, triggerDownload, tryTextPreview } from '../utils/blob'
+import { bytesToSize, triggerDownload } from '../utils/blob'
 import { copyToClipboard } from '../utils/clipboard'
 import { decodeDataUrlTextPayload, parseDataUrl } from '../utils/dataUrl'
-import { detectFileType, extensionFromMime, type PreviewKind } from '../utils/fileType'
+import { extensionFromMime, type PreviewKind } from '../utils/fileType'
 import { useObjectUrlLifecycle } from '../hooks/useObjectUrlLifecycle'
+import { buildBinaryPreview } from '../utils/decodedPreview'
 
 interface DataUrlPreviewState {
   blob?: Blob
@@ -60,11 +61,9 @@ export function DataUrlToolsPage() {
           addPadding: true,
         })
 
-        const detected = detectFileType(bytes, parsed.mime)
-        const blob = new Blob([new Uint8Array(bytes)], { type: detected.mime })
+        const binaryPreview = await buildBinaryPreview(bytes, parsed.mime)
+        const { detected, blob, textPreview } = binaryPreview
         const objectUrl = URL.createObjectURL(blob)
-        const textPreview =
-          detected.previewKind === 'text' ? await tryTextPreview(blob) : null
 
         if (cancelled) {
           URL.revokeObjectURL(objectUrl)

@@ -1,0 +1,42 @@
+@media (max-width: 1040px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .sidebar-section nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .meta-grid,
+  .tool-grid,
+  .overview-grid,
+  .encoder-type-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-map-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workbench-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .sidebar-section nav {
+    grid-template-columns: 1fr;
+  }
+
+  .pdf-preview {
+    min-height: 420px;
+  }
+}

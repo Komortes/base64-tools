@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-0: #f3f6fb;
+  --bg-1: #ecf3ff;
+  --bg-2: #f7faf2;
+  --panel: #ffffff;
+  --panel-soft: #f9fbff;
+  --text-0: #14212f;
+  --text-1: #2b4157;
+  --text-2: #546b82;
+  --line: #d7e2ee;
+  --line-strong: #bdd0e2;
+  --accent: #0f6ea3;
+  --accent-2: #1b9dd8;
+  --danger-bg: #ffe5e4;
+  --danger-fg: #892e31;
+
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--text-0);
+  background: radial-gradient(circle at 0% 0%, var(--bg-2) 0%, var(--bg-1) 32%, var(--bg-0) 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+textarea,
+input,
+select {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  font: inherit;
+  color: var(--text-0);
+  background: #fff;
+}
+
+input[type='file'] {
+  padding: 0.55rem 0.7rem;
+  min-height: 44px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+textarea:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #f9b45e;
+  outline-offset: 1px;
+  border-color: #f9b45e;
+}
+
+button {
+  border: 0;
+  background: linear-gradient(110deg, var(--accent), var(--accent-2));
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.56rem 0.95rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-ghost {
+  background: #e8f0fb;
+  color: #17466d;
+}
