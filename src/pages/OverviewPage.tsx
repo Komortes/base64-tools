@@ -3,7 +3,7 @@ export function OverviewPage() {
     <section className="tool-panel">
       <div className="panel-head">
         <h2>All-in-one Base64 Workspace</h2>
-        <p>Private, browser-only utilities for text, images, files, data URLs and validation.</p>
+        <p>Private, browser-only utilities for text, files, data URLs, validation and encoders.</p>
       </div>
 
       <div className="overview-grid">
@@ -11,6 +11,7 @@ export function OverviewPage() {
           <h3>What is included</h3>
           <ul>
             <li>Converter with URL-safe and padding controls.</li>
+            <li>Encoders for Audio, CSS, File, Hex, HTML, Image, PDF, Text, URL, Video.</li>
             <li>Smart decode for image, PDF, text, audio and video.</li>
             <li>Data URL parser with payload extraction and download.</li>
             <li>Detailed validator with normalization and error reasons.</li>
@@ -30,9 +31,9 @@ export function OverviewPage() {
         <article className="preview-card">
           <h3>Quick flow</h3>
           <ol>
-            <li>Paste Base64 or Data URL into Smart Decode.</li>
-            <li>Check detected MIME and preview block.</li>
-            <li>Download with the suggested extension.</li>
+            <li>Open Encoders and choose a content type.</li>
+            <li>Encode to Base64 or decode from Base64/Data URL.</li>
+            <li>Preview the result and download it if needed.</li>
           </ol>
         </article>
 

@@ -3,6 +3,7 @@ import { ConverterPage } from './pages/ConverterPage'
 import { DataUrlToolsPage } from './pages/DataUrlToolsPage'
 import { DecodeFilePage } from './pages/DecodeFilePage'
 import { DecodeImagePage } from './pages/DecodeImagePage'
+import { EncodersPage } from './pages/EncodersPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { SmartDecodePage } from './pages/SmartDecodePage'
 import { ValidatorPage } from './pages/ValidatorPage'
@@ -13,6 +14,7 @@ const navSections = [
     items: [
       { to: '/overview', label: 'Overview' },
       { to: '/converter', label: 'Converter' },
+      { to: '/encoders', label: 'Encoders' },
       { to: '/tools/smart-decode', label: 'Smart Decode' },
     ],
   },
@@ -35,6 +37,7 @@ const navSections = [
 const pageTitleMap: Record<string, string> = {
   '/overview': 'Overview',
   '/converter': 'Text Converter',
+  '/encoders': 'Encoders',
   '/tools/smart-decode': 'Smart Decode',
   '/decode/image': 'Image Decoder',
   '/decode/file': 'File Decoder',
@@ -89,6 +92,7 @@ function App() {
             <Route path="/" element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="/converter" element={<ConverterPage />} />
+            <Route path="/encoders" element={<EncodersPage />} />
             <Route path="/tools/smart-decode" element={<SmartDecodePage />} />
             <Route path="/decode/image" element={<DecodeImagePage />} />
             <Route path="/decode/file" element={<DecodeFilePage />} />
