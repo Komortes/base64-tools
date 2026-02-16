@@ -1,5 +1,5 @@
-import { detectMimeFromMagic } from './mimeSignatures'
-import { extensionFromMime, previewKindFromMime, sanitizeMime, type PreviewKind } from './mimeMappings'
+import { detectMimeFromMagic } from './mimeSignatures.js'
+import { extensionFromMime, previewKindFromMime, sanitizeMime, type PreviewKind } from './mimeMappings.js'
 
 export type DetectionSource = 'override' | 'hint' | 'magic' | 'text' | 'fallback'
 
