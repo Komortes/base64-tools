@@ -1,5 +1,7 @@
 const BASE64_STD_REGEX = /^[A-Za-z0-9+/]*={0,2}$/
 const BASE64_URL_REGEX = /^[A-Za-z0-9_-]*={0,2}$/
+const DEFAULT_BASE64_CHUNK_SIZE = 48 * 1024
+const DEFAULT_BLOB_READ_CHUNK_SIZE = 1024 * 1024
 
 export type Base64InputFormat = 'standard' | 'url-safe' | 'mixed'
 
@@ -36,6 +38,38 @@ function inferFormat(value: string): Base64InputFormat {
   return 'standard'
 }
 
+function normalizeChunkSize(size: number): number {
+  if (size < 3) {
+    return 3
+  }
+
+  return size - (size % 3)
+}
+
+function bytesToBinaryString(bytes: Uint8Array): string {
+  const chars = new Array<string>(bytes.length)
+  for (let i = 0; i < bytes.length; i += 1) {
+    chars[i] = String.fromCharCode(bytes[i])
+  }
+
+  return chars.join('')
+}
+
+function mergeBytes(prefix: Uint8Array, suffix: Uint8Array): Uint8Array {
+  if (!prefix.length) {
+    return suffix
+  }
+
+  if (!suffix.length) {
+    return prefix
+  }
+
+  const merged = new Uint8Array(prefix.length + suffix.length)
+  merged.set(prefix, 0)
+  merged.set(suffix, prefix.length)
+  return merged
+}
+
 export function normalizeBase64Input(
   input: string,
   options: NormalizationOptions = {},
@@ -59,13 +93,62 @@ export function normalizeBase64Input(
   return normalized
 }
 
-export function bytesToBase64(bytes: Uint8Array): string {
-  let binary = ''
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i])
+export function bytesToBase64(bytes: Uint8Array, chunkSize = DEFAULT_BASE64_CHUNK_SIZE): string {
+  if (!bytes.length) {
+    return ''
   }
 
-  return btoa(binary)
+  const safeChunkSize = normalizeChunkSize(chunkSize)
+  const parts: string[] = []
+
+  for (let offset = 0; offset < bytes.length; offset += safeChunkSize) {
+    const chunk = bytes.subarray(offset, offset + safeChunkSize)
+    parts.push(btoa(bytesToBinaryString(chunk)))
+  }
+
+  return parts.join('')
+}
+
+export interface BlobToBase64Options {
+  readChunkSize?: number
+  onProgress?: (processedBytes: number, totalBytes: number) => void
+}
+
+export async function blobToBase64(
+  blob: Blob,
+  options: BlobToBase64Options = {},
+): Promise<string> {
+  if (!blob.size) {
+    return ''
+  }
+
+  const readChunkSize = normalizeChunkSize(options.readChunkSize ?? DEFAULT_BLOB_READ_CHUNK_SIZE)
+  const encodedParts: string[] = []
+  let offset = 0
+  let carry = new Uint8Array(0)
+
+  while (offset < blob.size) {
+    const nextOffset = Math.min(offset + readChunkSize, blob.size)
+    const chunkBytes = new Uint8Array(await blob.slice(offset, nextOffset).arrayBuffer())
+    const merged = mergeBytes(carry, chunkBytes)
+
+    const remainderLength = merged.length % 3
+    const encodeLength = merged.length - remainderLength
+
+    if (encodeLength > 0) {
+      encodedParts.push(bytesToBase64(merged.subarray(0, encodeLength)))
+    }
+
+    carry = remainderLength > 0 ? merged.slice(encodeLength) : new Uint8Array(0)
+    offset = nextOffset
+    options.onProgress?.(offset, blob.size)
+  }
+
+  if (carry.length) {
+    encodedParts.push(bytesToBase64(carry))
+  }
+
+  return encodedParts.join('')
 }
 
 export function base64ToBytes(input: string, options: NormalizationOptions = {}): Uint8Array {

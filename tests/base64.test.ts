@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  blobToBase64,
   base64ToBytes,
   bytesToBase64,
   decodeBase64ToText,
@@ -60,4 +61,28 @@ test('validateBase64 marks invalid alphabet and mixed format', () => {
   assert.ok(invalidChars.errors.some((error) => error.includes('non-Base64 characters')))
   assert.equal(mixedAlphabet.isValid, false)
   assert.ok(mixedAlphabet.errors.some((error) => error.includes('mixes standard and URL-safe')))
+})
+
+test('bytesToBase64 handles large payloads with chunking', () => {
+  const source = new Uint8Array(200_123)
+  for (let i = 0; i < source.length; i += 1) {
+    source[i] = i % 256
+  }
+
+  const encoded = bytesToBase64(source)
+  const expected = Buffer.from(source).toString('base64')
+  assert.equal(encoded, expected)
+})
+
+test('blobToBase64 streams blob chunks without loading full payload at once', async () => {
+  const source = new Uint8Array(180_007)
+  for (let i = 0; i < source.length; i += 1) {
+    source[i] = (255 - i) % 256
+  }
+
+  const blob = new Blob([source])
+  const encoded = await blobToBase64(blob, { readChunkSize: 32 * 1024 })
+  const expected = Buffer.from(source).toString('base64')
+
+  assert.equal(encoded, expected)
 })
