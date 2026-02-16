@@ -142,9 +142,15 @@ export function DataUrlToolsPage() {
         <div className="preview-card">
           <div className="meta-grid">
             <p><strong>MIME:</strong> {previewState?.mime ?? parsed.mime}</p>
+            <p><strong>Media type:</strong> {parsed.mediaType}</p>
             <p><strong>Encoding:</strong> {parsed.isBase64 ? 'base64' : 'plain/URL-encoded'}</p>
             <p><strong>Payload length:</strong> {parsed.payload.length}</p>
-            <p><strong>Parameters:</strong> {parsed.parameters.length ? parsed.parameters.join('; ') : 'none'}</p>
+            <p>
+              <strong>Parameters:</strong>{' '}
+              {parsed.parameters.length
+                ? parsed.parameters.map((parameter) => parameter.raw).join('; ')
+                : 'none'}
+            </p>
             <p><strong>Preview:</strong> {previewState?.previewKind ?? 'n/a'}</p>
             <p><strong>Size:</strong> {previewState?.sizeBytes ? bytesToSize(previewState.sizeBytes) : 'n/a'}</p>
           </div>

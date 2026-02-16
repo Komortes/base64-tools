@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { ModeSelector } from '../components/codec/ModeSelector'
 import { ENCODER_CONFIGS, type EncoderKind, type FileInputMode } from '../configs/encoders'
-import { bytesToBase64 } from '../utils/base64'
+import { blobToBase64, bytesToBase64 } from '../utils/base64'
 import { bytesToSize, triggerDownload } from '../utils/blob'
+import { encodeBytesToBase64InWorker } from '../utils/base64Worker'
 import { copyToClipboard } from '../utils/clipboard'
 import { hexToBytes } from '../utils/hex'
 import { filenameFromUrl } from '../utils/urlFile'
+
+const WORKER_THRESHOLD_BYTES = 512 * 1024
 
 export function EncodersPage() {
   const [kind, setKind] = useState<EncoderKind>('text')
@@ -90,8 +93,8 @@ export function EncodersPage() {
     setIsEncoding(true)
 
     try {
-      let bytes: Uint8Array
       let mime = config.defaultMime
+      let encoded = ''
 
       if (config.mode === 'file') {
         const fileToEncode = selectedFile
@@ -99,17 +102,24 @@ export function EncodersPage() {
           throw new Error('Choose a file before encoding.')
         }
 
-        bytes = new Uint8Array(await fileToEncode.arrayBuffer())
+        encoded = await blobToBase64(fileToEncode)
         if (fileToEncode.type) {
           mime = fileToEncode.type
         }
       } else if (config.mode === 'hex') {
-        bytes = hexToBytes(hexInput)
+        const bytes = hexToBytes(hexInput)
+        encoded =
+          bytes.length >= WORKER_THRESHOLD_BYTES
+            ? await encodeBytesToBase64InWorker(bytes)
+            : bytesToBase64(bytes)
       } else {
-        bytes = new TextEncoder().encode(textInput)
+        const bytes = new TextEncoder().encode(textInput)
+        encoded =
+          bytes.length >= WORKER_THRESHOLD_BYTES
+            ? await encodeBytesToBase64InWorker(bytes)
+            : bytesToBase64(bytes)
       }
 
-      const encoded = bytesToBase64(bytes)
       const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
       setBase64Output(output)
     } catch (encodeError) {
