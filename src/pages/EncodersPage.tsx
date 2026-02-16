@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react'
-import { CodeSnippets } from '../components/CodeSnippets'
 import { ModeSelector } from '../components/codec/ModeSelector'
 import { ENCODER_CONFIGS, type EncoderKind, type FileInputMode } from '../configs/encoders'
 import { blobToBase64, bytesToBase64 } from '../utils/base64'
 import { bytesToSize, triggerDownload } from '../utils/blob'
 import { encodeBytesToBase64InWorker } from '../utils/base64Worker'
 import { copyToClipboard } from '../utils/clipboard'
-import { extractPayload } from '../utils/dataUrl'
 import { hexToBytes } from '../utils/hex'
 import { filenameFromUrl } from '../utils/urlFile'
 
@@ -29,13 +27,6 @@ export function EncodersPage() {
     () => ENCODER_CONFIGS.find((entry) => entry.kind === kind) ?? ENCODER_CONFIGS[0],
     [kind],
   )
-  const outputPayload = useMemo(() => {
-    if (!base64Output.trim()) {
-      return ''
-    }
-
-    return extractPayload(base64Output).payload.trim()
-  }, [base64Output])
 
   const resetMessages = () => {
     setError('')
@@ -312,7 +303,6 @@ export function EncodersPage() {
           </button>
         </div>
       </article>
-      <CodeSnippets base64={outputPayload} title="Use This Base64 in Code" />
 
       {error && <p className="message error">{error}</p>}
     </section>

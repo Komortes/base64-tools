@@ -9,10 +9,10 @@ import { ValidatorPage } from './pages/ValidatorPage'
 type ThemePack = 'atlas' | 'terminal' | 'sunset'
 
 const THEME_STORAGE_KEY = 'base64-tools-theme'
-const THEME_OPTIONS: Array<{ id: ThemePack; label: string; note: string }> = [
-  { id: 'atlas', label: 'Atlas', note: 'Balanced blue workspace.' },
-  { id: 'terminal', label: 'Terminal', note: 'Dark console vibe.' },
-  { id: 'sunset', label: 'Sunset', note: 'Warm, high-contrast palette.' },
+const THEME_OPTIONS: Array<{ id: ThemePack; label: string }> = [
+  { id: 'atlas', label: 'Atlas' },
+  { id: 'terminal', label: 'Terminal' },
+  { id: 'sunset', label: 'Sunset' },
 ]
 
 const navSections = [
@@ -91,7 +91,7 @@ function App() {
         </article>
 
         <article className="theme-card">
-          <h3>Theme Pack</h3>
+          <h3>Theme</h3>
           <div className="theme-pack-grid" role="radiogroup" aria-label="Theme pack selector">
             {THEME_OPTIONS.map((option) => (
               <button
@@ -102,8 +102,7 @@ function App() {
                 aria-checked={theme === option.id}
                 onClick={() => setTheme(option.id)}
               >
-                <span>{option.label}</span>
-                <span>{option.note}</span>
+                {option.label}
               </button>
             ))}
           </div>
