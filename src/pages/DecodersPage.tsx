@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { CodeSnippets } from '../components/CodeSnippets'
 import { ModeSelector } from '../components/codec/ModeSelector'
 import { DecodedPreview } from '../components/DecodedPreview'
 import { DECODER_CONFIGS, type DecoderKind } from '../configs/decoders'
@@ -6,6 +7,7 @@ import { bytesToSize, triggerDownload } from '../utils/blob'
 import { copyToClipboard } from '../utils/clipboard'
 import { expectedPreviewForConfig, kindFromPreview } from '../utils/decoderMode'
 import { decodeInputToBytes, type InputMode } from '../utils/decoder'
+import { extractPayload } from '../utils/dataUrl'
 import { useObjectUrlLifecycle } from '../hooks/useObjectUrlLifecycle'
 import { detectFileType, type PreviewKind } from '../utils/fileType'
 import { bytesToHex } from '../utils/hex'
@@ -62,6 +64,14 @@ export function DecodersPage() {
   const { revokeObjectUrl, setObjectUrl } = useObjectUrlLifecycle()
 
   const config = DECODER_CONFIGS.find((entry) => entry.kind === kind) ?? DECODER_CONFIGS[0]
+  const snippetPayload = useMemo(() => {
+    if (!result) {
+      return ''
+    }
+
+    const extracted = extractPayload(input)
+    return extracted.isBase64 ? extracted.payload.trim() : ''
+  }, [input, result])
 
   const resetMessages = () => {
     setError('')
@@ -283,6 +293,8 @@ export function DecodersPage() {
           </>
         )}
       </article>
+
+      <CodeSnippets base64={snippetPayload} title="Decode in Your Stack" />
 
       {error && <p className="message error">{error}</p>}
     </section>
