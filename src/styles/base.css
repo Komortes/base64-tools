@@ -1,9 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
+  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+
   --bg-0: #f3f6fb;
   --bg-1: #ecf3ff;
   --bg-2: #f7faf2;
+  --page-background: radial-gradient(circle at 0% 0%, var(--bg-2) 0%, var(--bg-1) 32%, var(--bg-0) 100%);
   --panel: #ffffff;
   --panel-soft: #f9fbff;
   --text-0: #14212f;
@@ -15,16 +19,115 @@
   --accent-2: #1b9dd8;
   --danger-bg: #ffe5e4;
   --danger-fg: #892e31;
+  --sidebar-grad-start: #133f67;
+  --sidebar-grad-end: #103454;
+  --sidebar-border: #1f5788;
+  --sidebar-text: #e7f2ff;
+  --sidebar-muted: #9ec4e6;
+  --sidebar-link-border: rgba(146, 189, 227, 0.3);
+  --sidebar-link-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-link-hover: rgba(255, 255, 255, 0.09);
+  --sidebar-active-bg: rgba(91, 184, 245, 0.22);
+  --sidebar-active-border: #5bb8f5;
+  --sidebar-privacy-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-privacy-border: rgba(159, 200, 236, 0.4);
+  --code-bg: #0d1b2a;
+  --code-fg: #dce7f3;
+  --validator-error-bg: #ffd9d9;
+  --validator-error-fg: #9c2727;
+  --validator-warning-bg: #fff3d8;
+  --validator-warning-fg: #7d5d18;
 
-  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.45;
   font-weight: 400;
   color: var(--text-0);
-  background: radial-gradient(circle at 0% 0%, var(--bg-2) 0%, var(--bg-1) 32%, var(--bg-0) 100%);
+  background: var(--page-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme='atlas'] {
+  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+}
+
+:root[data-theme='terminal'] {
+  --font-sans: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --bg-0: #07100f;
+  --bg-1: #0a1714;
+  --bg-2: #0d1e19;
+  --page-background: radial-gradient(circle at 0% 0%, #0f2f1f 0%, var(--bg-1) 40%, var(--bg-0) 100%);
+  --panel: #11201b;
+  --panel-soft: #162822;
+  --text-0: #d8f5e8;
+  --text-1: #abd9c5;
+  --text-2: #84b79f;
+  --line: #254538;
+  --line-strong: #2d614d;
+  --accent: #23b36b;
+  --accent-2: #47d98f;
+  --danger-bg: #3b1f20;
+  --danger-fg: #ffabab;
+  --sidebar-grad-start: #091811;
+  --sidebar-grad-end: #050d0a;
+  --sidebar-border: #245f45;
+  --sidebar-text: #dcf7ea;
+  --sidebar-muted: #84bfa4;
+  --sidebar-link-border: rgba(94, 146, 120, 0.45);
+  --sidebar-link-bg: rgba(44, 86, 66, 0.2);
+  --sidebar-link-hover: rgba(59, 108, 84, 0.42);
+  --sidebar-active-bg: rgba(35, 179, 107, 0.24);
+  --sidebar-active-border: #44d68d;
+  --sidebar-privacy-bg: rgba(23, 51, 40, 0.5);
+  --sidebar-privacy-border: rgba(86, 130, 107, 0.42);
+  --code-bg: #07100d;
+  --code-fg: #bdf3d7;
+  --validator-error-bg: #4a2022;
+  --validator-error-fg: #ffb2b2;
+  --validator-warning-bg: #473a1a;
+  --validator-warning-fg: #ffd188;
+}
+
+:root[data-theme='sunset'] {
+  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --bg-0: #fff1e7;
+  --bg-1: #ffe4d8;
+  --bg-2: #fff7e1;
+  --page-background: radial-gradient(circle at 5% 0%, #ffe4c6 0%, var(--bg-1) 34%, var(--bg-0) 100%);
+  --panel: #fff9f5;
+  --panel-soft: #fffaf6;
+  --text-0: #3a2117;
+  --text-1: #5f3424;
+  --text-2: #7d5141;
+  --line: #f2c9b5;
+  --line-strong: #e9a98d;
+  --accent: #c85a2e;
+  --accent-2: #ec8b43;
+  --danger-bg: #ffdcd1;
+  --danger-fg: #962f2f;
+  --sidebar-grad-start: #7c2f22;
+  --sidebar-grad-end: #5c1f16;
+  --sidebar-border: #b45636;
+  --sidebar-text: #ffe9da;
+  --sidebar-muted: #ffc5aa;
+  --sidebar-link-border: rgba(255, 190, 160, 0.46);
+  --sidebar-link-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-link-hover: rgba(255, 220, 201, 0.2);
+  --sidebar-active-bg: rgba(255, 170, 117, 0.22);
+  --sidebar-active-border: #ffb07d;
+  --sidebar-privacy-bg: rgba(255, 234, 218, 0.14);
+  --sidebar-privacy-border: rgba(255, 206, 180, 0.4);
+  --code-bg: #392015;
+  --code-fg: #ffe8db;
+  --validator-error-bg: #ffdfd7;
+  --validator-error-fg: #8f2a25;
+  --validator-warning-bg: #fff2d9;
+  --validator-warning-fg: #8a5b18;
 }
 
 * {
@@ -35,6 +138,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: var(--text-0);
+  background: var(--page-background);
 }
 
 #root {
@@ -63,7 +168,7 @@ select {
   padding: 0.8rem 0.9rem;
   font: inherit;
   color: var(--text-0);
-  background: #fff;
+  background: var(--panel);
 }
 
 input[type='file'] {
@@ -74,7 +179,7 @@ input[type='file'] {
 textarea {
   resize: vertical;
   min-height: 120px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -113,6 +218,6 @@ button:disabled {
 }
 
 .button-ghost {
-  background: #e8f0fb;
-  color: #17466d;
+  background: color-mix(in oklab, var(--panel) 65%, var(--accent) 15%);
+  color: color-mix(in oklab, var(--text-0) 75%, var(--accent) 25%);
 }

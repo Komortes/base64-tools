@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Route, Routes } from 'react-router'
 import { DataUrlToolsPage } from './pages/DataUrlToolsPage'
 import { DecodersPage } from './pages/DecodersPage'
 import { EncodersPage } from './pages/EncodersPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { ValidatorPage } from './pages/ValidatorPage'
+
+type ThemePack = 'atlas' | 'terminal' | 'sunset'
+
+const THEME_STORAGE_KEY = 'base64-tools-theme'
+const THEME_OPTIONS: Array<{ id: ThemePack; label: string; note: string }> = [
+  { id: 'atlas', label: 'Atlas', note: 'Balanced blue workspace.' },
+  { id: 'terminal', label: 'Terminal', note: 'Dark console vibe.' },
+  { id: 'sunset', label: 'Sunset', note: 'Warm, high-contrast palette.' },
+]
 
 const navSections = [
   {
@@ -24,6 +34,24 @@ const navSections = [
 ]
 
 function App() {
+  const [theme, setTheme] = useState<ThemePack>(() => {
+    if (typeof window === 'undefined') {
+      return 'atlas'
+    }
+
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+    if (storedTheme === 'atlas' || storedTheme === 'terminal' || storedTheme === 'sunset') {
+      return storedTheme
+    }
+
+    return 'atlas'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -60,6 +88,25 @@ function App() {
         <article className="privacy-card">
           <h3>Privacy</h3>
           <p>Everything is computed in your browser tab, including decode and preview.</p>
+        </article>
+
+        <article className="theme-card">
+          <h3>Theme Pack</h3>
+          <div className="theme-pack-grid" role="radiogroup" aria-label="Theme pack selector">
+            {THEME_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={`theme-pack-option${theme === option.id ? ' is-active' : ''}`}
+                role="radio"
+                aria-checked={theme === option.id}
+                onClick={() => setTheme(option.id)}
+              >
+                <span>{option.label}</span>
+                <span>{option.note}</span>
+              </button>
+            ))}
+          </div>
         </article>
       </aside>
 
