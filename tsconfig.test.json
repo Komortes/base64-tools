@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": false,
+    "outDir": ".test-dist",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/utils/base64.ts",
+    "src/utils/dataUrl.ts",
+    "src/utils/detectFileType.ts",
+    "src/utils/mimeMappings.ts",
+    "src/utils/mimeSignatures.ts",
+    "tests/**/*.test.ts"
+  ]
+}
