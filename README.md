@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# Base64 Tools
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A local-first toolkit for encoding and decoding Base64, Data URLs, and binary payloads directly in the browser.
 
-Currently, two official plugins are available:
+## Live Instance
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+`https://base64-tools.pages.dev/overview`
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `Encoders`: convert text, hex, files, images, PDFs, audio, video, and URLs to Base64.
+- `Decoders`: decode Base64/Data URLs with auto-detection and preview support.
+- `Data URL Tools`: parse `data:` URLs, inspect metadata, extract payloads, and preview output.
+- `Validator`: validate Base64 alphabet, padding, length, and URL-safe compatibility.
 
-## Expanding the ESLint configuration
+## Privacy
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- All processing happens in your browser.
+- The app does not upload your payloads to a backend service.
+- URL-based file loading is performed by your browser and may be blocked by CORS.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- React 19
+- TypeScript
+- Vite
+- React Router
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Quick Start
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+By default, the app runs at `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `npm run dev` - start development server.
+- `npm run build` - run type-check and create production build.
+- `npm run preview` - preview production build locally.
+- `npm run lint` - run ESLint.
+
+## Project Structure
+
+```text
+src/
+  components/      UI components
+  configs/         mode configs (encoders/decoders)
+  hooks/           React hooks
+  pages/           tool pages
+  styles/          CSS layers
+  utils/           Base64, Data URL, MIME, and helper utilities
 ```
+
+## Limitations
+
+- Very large payloads may hit browser tab memory limits.
+- Some remote URLs cannot be fetched because of CORS/source policies.
+- Preview support depends on MIME handling in the current browser.
+
+## Roadmap Ideas
+
+- Web Worker support for heavy operations on large files.
+- Batch mode for multi-file processing.
+- Unit tests for `utils` (Base64/Data URL/MIME detection).
+- Extended validator with auto-fix options.
