@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "tsc -p tsconfig.test.json && node --experimental-specifier-resolution=node --test .test-dist/tests/*.test.js",
+    "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/*.test.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
