@@ -1,9 +1,9 @@
 .tool-panel {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--panel-strong-bg);
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 1.2rem;
-  box-shadow: 0 14px 34px rgba(18, 53, 91, 0.09);
+  box-shadow: var(--panel-shadow);
   display: grid;
   gap: 1.05rem;
 }
@@ -71,9 +71,9 @@
 }
 
 .toggle-chip {
-  background: #edf3fb;
-  color: #18496e;
-  border: 1px solid #c7d9ea;
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  border: 1px solid var(--chip-border);
   border-radius: 999px;
   min-height: 40px;
   padding: 0.35rem 0.75rem 0.35rem 0.9rem;
@@ -85,16 +85,16 @@
 }
 
 .toggle-chip.is-active {
-  background: linear-gradient(110deg, #0f6ea3, #1b9dd8);
-  border-color: #5cb3ea;
-  color: #fff;
+  background: linear-gradient(110deg, var(--active-grad-start), var(--active-grad-end));
+  border-color: var(--active-border);
+  color: var(--active-fg);
 }
 
 .toggle-chip-indicator {
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  border: 2px solid #6f8ca9;
+  border: 2px solid var(--line-strong);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -110,11 +110,11 @@
 }
 
 .toggle-chip-indicator.is-active {
-  border-color: #fff;
+  border-color: var(--active-fg);
 }
 
 .toggle-chip-indicator.is-active::after {
-  background: #fff;
+  background: var(--active-fg);
 }
 
 .message {
@@ -147,7 +147,7 @@
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--line);
-  background: repeating-conic-gradient(#f5f8fc 0% 25%, #eff4fa 0% 50%) 50% / 12px 12px;
+  background: repeating-conic-gradient(var(--checker-a) 0% 25%, var(--checker-b) 0% 50%) 50% / 12px 12px;
 }
 
 .image-preview {
@@ -191,11 +191,11 @@
 }
 
 .validation-state.ok {
-  color: #1f6a3b;
+  color: var(--status-ok);
 }
 
 .validation-state.bad {
-  color: #962f2f;
+  color: var(--status-bad);
 }
 
 .hint-text {
@@ -210,9 +210,9 @@
 }
 
 .mode-pill {
-  background: color-mix(in oklab, var(--panel) 82%, var(--accent) 11%);
-  color: color-mix(in oklab, var(--text-0) 70%, var(--accent) 30%);
-  border: 1px solid color-mix(in oklab, var(--line) 70%, var(--accent) 30%);
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  border: 1px solid var(--chip-border);
   text-align: left;
   font-weight: 600;
   min-height: 44px;
@@ -241,9 +241,9 @@
 }
 
 .mode-pill.is-active {
-  border-color: #5cb3ea;
-  background: linear-gradient(110deg, #0f6ea3, #1b9dd8);
-  color: #fff;
+  border-color: var(--active-border);
+  background: linear-gradient(110deg, var(--active-grad-start), var(--active-grad-end));
+  color: var(--active-fg);
 }
 
 .output-block {
@@ -341,8 +341,8 @@
 }
 
 .source-mode-button.is-active {
-  background: linear-gradient(110deg, #0f6ea3, #1b9dd8);
-  color: #fff;
+  background: linear-gradient(110deg, var(--active-grad-start), var(--active-grad-end));
+  color: var(--active-fg);
 }
 
 .upload-source-block {
@@ -393,56 +393,10 @@
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #bfd2e4;
+  border: 2px solid var(--line-strong);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-}
-
-.snippet-card {
-  gap: 0.65rem;
-}
-
-.snippet-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.snippet-tab-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.snippet-tab {
-  min-height: 36px;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--panel) 80%, var(--accent) 10%);
-  color: color-mix(in oklab, var(--text-0) 76%, var(--accent) 24%);
-  border: 1px solid color-mix(in oklab, var(--line) 70%, var(--accent) 30%);
-}
-
-.snippet-tab.is-active {
-  background: linear-gradient(110deg, var(--accent), var(--accent-2));
-  border-color: color-mix(in oklab, var(--accent) 55%, #fff 45%);
-  color: #fff;
-}
-
-.snippet-code {
-  margin: 0;
-  border-radius: 12px;
-  border: 1px solid color-mix(in oklab, var(--line) 70%, var(--accent) 30%);
-  background: var(--code-bg);
-  color: var(--code-fg);
-  padding: 0.8rem;
-  max-height: 320px;
-  overflow: auto;
-  white-space: pre;
-  font-family: var(--font-mono);
-  font-size: 0.84rem;
 }
 
 .validator-highlight-wrap {
@@ -455,11 +409,14 @@
   border: 1px solid var(--line);
   background: color-mix(in oklab, var(--panel) 85%, var(--bg-1) 15%);
   border-radius: 10px;
-  padding: 0.75rem;
+  padding: 0.6rem;
+  max-height: 170px;
+  overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .validator-highlight-char {
@@ -474,6 +431,11 @@
 .validator-highlight-char.is-warning {
   background: var(--validator-warning-bg);
   color: var(--validator-warning-fg);
+}
+
+.validator-highlight-char.is-first-error {
+  outline: 2px solid color-mix(in oklab, var(--validator-error-fg) 55%, #fff 45%);
+  outline-offset: 1px;
 }
 
 .validator-legend {

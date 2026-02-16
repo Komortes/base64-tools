@@ -21,7 +21,7 @@
 .overview-hero-main {
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: linear-gradient(140deg, #f7fbff, #eef6ff);
+  background: linear-gradient(140deg, var(--overview-hero-start), var(--overview-hero-end));
   padding: 1rem;
   display: grid;
   gap: 0.55rem;
@@ -34,7 +34,7 @@
 
 .overview-note {
   margin-top: 0.1rem;
-  color: #4c657c;
+  color: var(--overview-note);
   font-size: 0.9rem;
   font-style: italic;
 }
@@ -54,14 +54,14 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.55rem 0.6rem;
-  background: #fff;
+  background: var(--mode-item-bg);
   transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .mode-map-link:hover .mode-map-item {
-  border-color: #9fc2df;
+  border-color: var(--mode-item-hover-border);
   transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(16, 65, 104, 0.09);
+  box-shadow: var(--mode-item-hover-shadow);
 }
 
 .mode-map-item h4 {
@@ -76,5 +76,5 @@
 }
 
 .preview-card.accent {
-  background: linear-gradient(135deg, #fff7e4, #eef7ff);
+  background: linear-gradient(135deg, var(--overview-accent-start), var(--overview-accent-end));
 }

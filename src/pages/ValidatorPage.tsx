@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { normalizeBase64Input, toUrlSafeBase64, validateBase64 } from '../utils/base64'
 import { copyToClipboard } from '../utils/clipboard'
 
@@ -112,12 +112,37 @@ function buildHighlightAnalysis(input: string, stripWhitespace: boolean): Highli
 export function ValidatorPage() {
   const [input, setInput] = useState('')
   const [stripWhitespace, setStripWhitespace] = useState(true)
+  const highlightRef = useRef<HTMLPreElement | null>(null)
 
   const result = useMemo(() => validateBase64(input, stripWhitespace), [input, stripWhitespace])
   const highlight = useMemo(
     () => buildHighlightAnalysis(input, stripWhitespace),
     [input, stripWhitespace],
   )
+
+  useEffect(() => {
+    if (highlight.firstErrorIndex === null) {
+      return
+    }
+
+    const container = highlightRef.current
+    if (!container) {
+      return
+    }
+
+    const firstErrorNode = container.querySelector<HTMLElement>(
+      `[data-char-index="${highlight.firstErrorIndex}"]`,
+    )
+    if (!firstErrorNode) {
+      return
+    }
+
+    firstErrorNode.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    })
+  }, [highlight.firstErrorIndex, input, stripWhitespace])
 
   const copyNormalized = async () => {
     await copyToClipboard(result.normalized)
@@ -209,13 +234,16 @@ export function ValidatorPage() {
 
           <div className="validator-highlight-wrap">
             <p className="field-label">Input map (errors/warnings)</p>
-            <pre className="validator-highlight" aria-live="polite">
+            <pre ref={highlightRef} className="validator-highlight" aria-live="polite">
               {highlight.tokens.map((token, index) => (
                 <span
                   key={`${index}-${token.char}`}
                   className={`validator-highlight-char${
                     token.level ? ` is-${token.level}` : ''
+                  }${
+                    highlight.firstErrorIndex === index ? ' is-first-error' : ''
                   }`}
+                  data-char-index={index}
                   title={token.reason ?? undefined}
                 >
                   {token.char}
