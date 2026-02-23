@@ -19,6 +19,7 @@ const THEME_OPTIONS: Array<{ id: ThemePack; labelKey: string }> = [
 const LOCALE_OPTIONS: Array<{ id: Locale; labelKey: string }> = [
   { id: 'en', labelKey: 'app.language.en' },
   { id: 'ru', labelKey: 'app.language.ru' },
+  { id: 'uk', labelKey: 'app.language.uk' },
 ]
 
 function App() {
@@ -118,7 +119,7 @@ function App() {
 
         <article className="theme-card">
           <h3>{t('app.language.title')}</h3>
-          <div className="theme-pack-grid" role="radiogroup" aria-label={t('app.language.selector')}>
+          <div className="theme-pack-grid language-pack-grid" role="radiogroup" aria-label={t('app.language.selector')}>
             {LOCALE_OPTIONS.map((option) => (
               <button
                 key={option.id}

@@ -155,8 +155,12 @@
   gap: 0.32rem;
 }
 
+.language-pack-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .theme-pack-option {
-  min-height: 34px;
+  min-height: 38px;
   background: var(--sidebar-link-bg);
   border: 1px solid var(--sidebar-link-border);
   color: var(--sidebar-text);
@@ -164,10 +168,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.4rem;
-  font-size: 0.74rem;
-  line-height: 1;
+  padding: 0.3rem 0.42rem;
+  font-size: 0.78rem;
+  line-height: 1.18;
   text-align: center;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .theme-pack-option.is-active {
