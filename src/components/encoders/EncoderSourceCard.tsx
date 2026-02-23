@@ -1,8 +1,10 @@
 import type { EncoderConfig, FileInputMode } from '../../configs/encoders'
-import { selectedFileLabel } from '../../hooks/useEncodersState'
+import { bytesToSize } from '../../utils/blob'
+import { useI18n } from '../../i18n/useI18n'
 
 interface EncoderSourceCardProps {
   config: EncoderConfig
+  placeholder: string
   textInput: string
   hexInput: string
   fileInputMode: FileInputMode
@@ -24,6 +26,7 @@ interface EncoderSourceCardProps {
 
 export function EncoderSourceCard({
   config,
+  placeholder,
   textInput,
   hexInput,
   fileInputMode,
@@ -42,33 +45,39 @@ export function EncoderSourceCard({
   onEncode,
   onClear,
 }: EncoderSourceCardProps) {
+  const { t } = useI18n()
+
+  const fileLabel = selectedFile
+    ? t('encoders.source.selected', { name: selectedFile.name, size: bytesToSize(selectedFile.size) })
+    : t('encoders.source.none')
+
   return (
     <article className="preview-card source-card">
-      <h3>Source</h3>
+      <h3>{t('encoders.source.title')}</h3>
 
       {config.mode === 'file' && (
         <div className="upload-source-grid">
-          <div className="source-mode-toggle" role="tablist" aria-label="File source mode">
+          <div className="source-mode-toggle" role="tablist" aria-label={t('encoders.source.modeLabel')}>
             <button
               type="button"
               className={`source-mode-button${fileInputMode === 'local' ? ' is-active' : ''}`}
               onClick={() => onFileInputModeChange('local')}
             >
-              Local file
+              {t('encoders.source.local')}
             </button>
             <button
               type="button"
               className={`source-mode-button${fileInputMode === 'url' ? ' is-active' : ''}`}
               onClick={() => onFileInputModeChange('url')}
             >
-              File URL
+              {t('encoders.source.url')}
             </button>
           </div>
 
           <section className="upload-source-block">
             {fileInputMode === 'local' ? (
               <>
-                <label className="field-label" htmlFor="local-file-input">Local file</label>
+                <label className="field-label" htmlFor="local-file-input">{t('encoders.source.local')}</label>
                 <input
                   id="local-file-input"
                   type="file"
@@ -78,14 +87,14 @@ export function EncoderSourceCard({
               </>
             ) : (
               <>
-                <label className="field-label" htmlFor="remote-file-url">File URL</label>
+                <label className="field-label" htmlFor="remote-file-url">{t('encoders.source.url')}</label>
                 <div className="url-load-row">
                   <input
                     id="remote-file-url"
                     type="url"
                     value={remoteFileUrl}
                     onChange={(event) => onRemoteFileUrlChange(event.target.value)}
-                    placeholder="https://example.com/file.pdf"
+                    placeholder={t('encoders.source.urlPlaceholder')}
                   />
                   <button
                     type="button"
@@ -93,7 +102,7 @@ export function EncoderSourceCard({
                     onClick={onLoadFromUrl}
                     disabled={loadingRemoteFile || isEncoding}
                   >
-                    {loadingRemoteFile ? 'Loading...' : 'Load'}
+                    {loadingRemoteFile ? t('encoders.source.loading') : t('encoders.source.load')}
                   </button>
                 </div>
               </>
@@ -107,7 +116,7 @@ export function EncoderSourceCard({
           value={textInput}
           onChange={(event) => onTextInputChange(event.target.value)}
           rows={10}
-          placeholder={config.placeholder}
+          placeholder={placeholder}
         />
       )}
 
@@ -116,12 +125,12 @@ export function EncoderSourceCard({
           value={hexInput}
           onChange={(event) => onHexInputChange(event.target.value)}
           rows={10}
-          placeholder={config.placeholder}
+          placeholder={placeholder}
         />
       )}
 
       {config.mode === 'file' && (
-        <p className="field-label">{selectedFileLabel(selectedFile)}</p>
+        <p className="field-label">{fileLabel}</p>
       )}
 
       <div className="toggle-row">
@@ -131,7 +140,7 @@ export function EncoderSourceCard({
           aria-pressed={withDataUrlPrefix}
           onClick={onToggleDataUrlPrefix}
         >
-          <span>Include data URL prefix</span>
+          <span>{t('encoders.toggle.dataUrl')}</span>
           <span
             className={`toggle-chip-indicator${withDataUrlPrefix ? ' is-active' : ''}`}
             aria-hidden="true"
@@ -141,7 +150,7 @@ export function EncoderSourceCard({
 
       <div className="button-row">
         <button onClick={onEncode} disabled={isEncoding || loadingRemoteFile}>
-          Encode to Base64
+          {t('encoders.action.encode')}
         </button>
         <button
           type="button"
@@ -149,14 +158,14 @@ export function EncoderSourceCard({
           onClick={onClear}
           disabled={isEncoding || loadingRemoteFile}
         >
-          Clear
+          {t('encoders.action.clear')}
         </button>
       </div>
 
       {(loadingRemoteFile || isEncoding) && (
         <div className="inline-loader" role="status" aria-live="polite">
           <span className="spinner" />
-          <span>{loadingRemoteFile ? 'Loading file from URL...' : 'Encoding...'}</span>
+          <span>{loadingRemoteFile ? t('encoders.state.loadingUrl') : t('encoders.state.encoding')}</span>
         </div>
       )}
     </article>

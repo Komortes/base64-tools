@@ -2,12 +2,15 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, test } from 'vitest'
 import App from '../../src/App'
+import { I18nProvider } from '../../src/i18n/I18nProvider'
 
 function renderApp(initialEntry: string) {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <App />
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <App />
+      </MemoryRouter>
+    </I18nProvider>,
   )
 }
 
@@ -37,5 +40,14 @@ describe('App routing', () => {
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'terminal')
     expect(window.localStorage.getItem('base64-tools-theme')).toBe('terminal')
+  })
+
+  test('switches locale to russian and persists it', () => {
+    renderApp('/overview')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Russian' }))
+
+    expect(screen.getByRole('heading', { name: 'Быстрая Base64-рабочая область' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('base64-tools-locale')).toBe('ru')
   })
 })
