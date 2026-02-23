@@ -3,8 +3,11 @@ import { EncoderSourceCard } from '../components/encoders/EncoderSourceCard'
 import { ModeSelector } from '../components/codec/ModeSelector'
 import { ENCODER_CONFIGS } from '../configs/encoders'
 import { useEncodersState } from '../hooks/useEncodersState'
+import { useI18n } from '../i18n/useI18n'
+import { encoderLabel, encoderPlaceholder } from '../i18n/toolStrings'
 
 export function EncodersPage() {
+  const { t } = useI18n()
   const {
     kind,
     config,
@@ -36,18 +39,19 @@ export function EncodersPage() {
   return (
     <section className="tool-panel">
       <div className="panel-head">
-        <h2>Encoders</h2>
-        <p>Encode source data to Base64. Decoding is now available on the Decoders page.</p>
+        <h2>{t('encoders.title')}</h2>
+        <p>{t('encoders.subtitle')}</p>
       </div>
 
       <ModeSelector
         activeKind={kind}
-        items={ENCODER_CONFIGS.map(({ kind: modeKind, label }) => ({ kind: modeKind, label }))}
+        items={ENCODER_CONFIGS.map(({ kind: modeKind }) => ({ kind: modeKind, label: encoderLabel(modeKind, t) }))}
         onSelect={handleTypeChange}
       />
 
       <EncoderSourceCard
         config={config}
+        placeholder={encoderPlaceholder(config.kind, t)}
         textInput={textInput}
         hexInput={hexInput}
         fileInputMode={fileInputMode}

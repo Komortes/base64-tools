@@ -1,3 +1,5 @@
+import { useI18n } from '../../i18n/useI18n'
+
 interface DecoderInputCardProps {
   input: string
   mimeOverride: string
@@ -17,15 +19,17 @@ export function DecoderInputCard({
   onDecode,
   onClear,
 }: DecoderInputCardProps) {
+  const { t } = useI18n()
+
   return (
     <article className="preview-card source-card">
-      <h3>Input</h3>
+      <h3>{t('decoders.input.title')}</h3>
 
       <textarea
         value={input}
         onChange={(event) => onInputChange(event.target.value)}
         rows={14}
-        placeholder="Paste Base64 or Data URL"
+        placeholder={t('decoders.input.placeholder')}
       />
 
       <input
@@ -33,20 +37,20 @@ export function DecoderInputCard({
         type="text"
         value={mimeOverride}
         onChange={(event) => onMimeOverrideChange(event.target.value)}
-        placeholder="Optional MIME override (e.g. application/pdf)"
+        placeholder={t('decoders.input.mimePlaceholder')}
       />
 
       <div className="button-row">
-        <button onClick={onDecode} disabled={isDecoding}>Decode</button>
+        <button onClick={onDecode} disabled={isDecoding}>{t('decoders.action.decode')}</button>
         <button type="button" className="button-ghost" onClick={onClear} disabled={isDecoding}>
-          Clear
+          {t('decoders.action.clear')}
         </button>
       </div>
 
       {isDecoding && (
         <div className="inline-loader" role="status" aria-live="polite">
           <span className="spinner" />
-          <span>Decoding...</span>
+          <span>{t('decoders.state.decoding')}</span>
         </div>
       )}
     </article>
