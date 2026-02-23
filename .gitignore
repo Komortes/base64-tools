@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 .test-dist
+coverage
+playwright-report
+test-results
+.nyc_output
 *.local
 
 # Editor directories and files

@@ -38,6 +38,11 @@ By default, the app runs at `http://localhost:5173`.
 ## Scripts
 
 - `npm run dev` - start development server.
+- `npm run typecheck` - run TypeScript project checks.
+- `npm run test:unit` - run `node:test` utility tests.
+- `npm run test:ui` - run React UI tests (Vitest + RTL).
+- `npm run test:e2e` - run Playwright e2e smoke tests.
+- `npm run test:coverage` - enforce coverage threshold gates (80%+).
 - `npm run build` - run type-check and create production build.
 - `npm run preview` - preview production build locally.
 - `npm run lint` - run ESLint.
@@ -52,6 +57,9 @@ src/
   pages/           tool pages
   styles/          CSS layers
   utils/           Base64, Data URL, MIME, and helper utilities
+tests/
+  e2e/             Playwright end-to-end checks
+  ui/              Vitest + RTL UI tests
 ```
 
 ## Limitations
