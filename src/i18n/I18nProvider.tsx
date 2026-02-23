@@ -5,7 +5,9 @@ import { translate, type Locale, type TranslationParams } from './translations'
 const LOCALE_STORAGE_KEY = 'base64-tools-locale'
 
 function parseLocale(value: string | null): Locale {
-  return value === 'ru' ? 'ru' : 'en'
+  if (value === 'ru') return 'ru'
+  if (value === 'uk') return 'uk'
+  return 'en'
 }
 
 interface I18nProviderProps {

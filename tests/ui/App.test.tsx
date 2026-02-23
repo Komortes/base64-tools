@@ -50,4 +50,13 @@ describe('App routing', () => {
     expect(screen.getByRole('heading', { name: 'Быстрая Base64-рабочая область' })).toBeInTheDocument()
     expect(window.localStorage.getItem('base64-tools-locale')).toBe('ru')
   })
+
+  test('switches locale to ukrainian and persists it', () => {
+    renderApp('/overview')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Ukrainian' }))
+
+    expect(screen.getByRole('heading', { name: 'Швидкий Base64 Workspace' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('base64-tools-locale')).toBe('uk')
+  })
 })
