@@ -6,7 +6,7 @@ export interface TranslationParams {
 
 type Dictionary = Record<string, string>
 
-const en: Dictionary = {
+export const en: Dictionary = {
   'app.eyebrow': 'Local-first toolkit',
   'app.nav.workspace': 'Workspace',
   'app.nav.tools': 'Tools',
@@ -193,7 +193,7 @@ const en: Dictionary = {
   'preview.none': 'No browser preview for this type. Use download.',
 }
 
-const ru: Dictionary = {
+export const ru: Dictionary = {
   'app.eyebrow': 'Локальный набор инструментов',
   'app.nav.workspace': 'Рабочая область',
   'app.nav.tools': 'Инструменты',
@@ -380,7 +380,7 @@ const ru: Dictionary = {
   'preview.none': 'Браузерный предпросмотр для этого типа недоступен. Используйте скачивание.',
 }
 
-const uk: Dictionary = {
+export const uk: Dictionary = {
   ...ru,
   'app.eyebrow': 'Локальний набір інструментів',
   'app.nav.workspace': 'Робоча область',
@@ -557,6 +557,12 @@ const uk: Dictionary = {
 }
 
 const dictionaries: Record<Locale, Dictionary> = { en, ru, uk }
+
+export const resources = {
+  en: { translation: en },
+  ru: { translation: ru },
+  uk: { translation: uk },
+} as const
 
 function interpolate(template: string, params?: TranslationParams): string {
   if (!params) {
