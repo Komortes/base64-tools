@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Navigate, NavLink, Route, Routes } from 'react-router'
 import { useI18n } from './i18n/useI18n'
 import { DataUrlToolsPage } from './pages/DataUrlToolsPage'
@@ -7,8 +7,7 @@ import { EncodersPage } from './pages/EncodersPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { ValidatorPage } from './pages/ValidatorPage'
 import type { Locale } from './i18n/translations'
-
-type ThemePack = 'atlas' | 'terminal' | 'sunset'
+import { usePreferencesStore, type ThemePack } from './store/preferences'
 
 const THEME_STORAGE_KEY = 'base64-tools-theme'
 const THEME_OPTIONS: Array<{ id: ThemePack; labelKey: string }> = [
@@ -24,19 +23,8 @@ const LOCALE_OPTIONS: Array<{ id: Locale; labelKey: string }> = [
 
 function App() {
   const { locale, setLocale, t } = useI18n()
-
-  const [theme, setTheme] = useState<ThemePack>(() => {
-    if (typeof window === 'undefined') {
-      return 'atlas'
-    }
-
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-    if (storedTheme === 'atlas' || storedTheme === 'terminal' || storedTheme === 'sunset') {
-      return storedTheme
-    }
-
-    return 'atlas'
-  })
+  const theme = usePreferencesStore((state) => state.theme)
+  const setTheme = usePreferencesStore((state) => state.setTheme)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

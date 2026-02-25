@@ -2,21 +2,20 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, test } from 'vitest'
 import App from '../../src/App'
-import { I18nProvider } from '../../src/i18n/I18nProvider'
+import { usePreferencesStore } from '../../src/store/preferences'
 
 function renderApp(initialEntry: string) {
   return render(
-    <I18nProvider>
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <App />
-      </MemoryRouter>
-    </I18nProvider>,
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <App />
+    </MemoryRouter>,
   )
 }
 
 describe('App routing', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    usePreferencesStore.setState({ theme: 'atlas', locale: 'en' })
     document.documentElement.removeAttribute('data-theme')
   })
 
