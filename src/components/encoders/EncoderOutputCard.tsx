@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n/useI18n'
 interface EncoderOutputCardProps {
   base64Output: string
   onBase64OutputChange: (value: string) => void
-  onCopyBase64: () => Promise<boolean>
+  onCopyBase64: () => Promise<void> | void
   onDownloadBase64: () => void
 }
 

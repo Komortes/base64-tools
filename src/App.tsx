@@ -8,6 +8,7 @@ import { OverviewPage } from './pages/OverviewPage'
 import { ValidatorPage } from './pages/ValidatorPage'
 import type { Locale } from './i18n/translations'
 import { usePreferencesStore, type ThemePack } from './store/preferences'
+import { ToastRegion } from './components/ToastRegion'
 
 const THEME_STORAGE_KEY = 'base64-tools-theme'
 const THEME_OPTIONS: Array<{ id: ThemePack; labelKey: string }> = [
@@ -141,6 +142,8 @@ function App() {
           </Routes>
         </main>
       </div>
+
+      <ToastRegion />
     </div>
   )
 }
