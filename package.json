@@ -2,7 +2,11 @@
   "name": "base64-tools",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc -b",

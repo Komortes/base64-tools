@@ -16,6 +16,9 @@ playwright-report
 test-results
 .nyc_output
 *.local
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
