@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { normalizeBase64Input, toUrlSafeBase64, validateBase64 } from '../utils/base64'
 import { copyToClipboard } from '../utils/clipboard'
 import { useI18n } from '../i18n/useI18n'
+import { useToastStore } from '../store/toast'
 
 type HighlightLevel = 'error' | 'warning' | null
 
@@ -116,6 +117,7 @@ function buildHighlightAnalysis(
 
 export function ValidatorPage() {
   const { t } = useI18n()
+  const pushToast = useToastStore((state) => state.pushToast)
   const [input, setInput] = useState('')
   const [stripWhitespace, setStripWhitespace] = useState(true)
   const highlightRef = useRef<HTMLPreElement | null>(null)
@@ -151,7 +153,11 @@ export function ValidatorPage() {
   }, [highlight.firstErrorIndex, input, stripWhitespace])
 
   const copyNormalized = async () => {
-    await copyToClipboard(result.normalized)
+    const success = await copyToClipboard(result.normalized)
+    pushToast({
+      kind: success ? 'success' : 'error',
+      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
+    })
   }
 
   const applyNormalized = () => {

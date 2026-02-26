@@ -237,9 +237,9 @@ textarea {
   line-height: 1.5;
 }
 
-textarea:focus,
-input:focus,
-select:focus {
+textarea:focus-visible,
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid #f9b45e;
   outline-offset: 1px;
   border-color: #f9b45e;
@@ -268,6 +268,19 @@ button:active {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+.side-link:focus-visible,
+.theme-pack-option:focus-visible,
+.mode-pill:focus-visible,
+.toggle-chip:focus-visible,
+.source-mode-button:focus-visible,
+.warning-tag:focus-visible,
+.toast-close:focus-visible {
+  outline: 2px solid #f9b45e;
+  outline-offset: 2px;
 }
 
 .button-ghost {

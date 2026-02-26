@@ -1,6 +1,6 @@
 import { DecodedPreview } from '../DecodedPreview'
 import type { DecoderKind } from '../../configs/decoders'
-import { bytesToSize, triggerDownload } from '../../utils/blob'
+import { bytesToSize } from '../../utils/blob'
 import type { DecodeMismatchWarning, DecodeResult } from '../../hooks/useDecodersState'
 import { useI18n } from '../../i18n/useI18n'
 
@@ -9,7 +9,8 @@ interface DecoderOutputCardProps {
   mismatchWarning: DecodeMismatchWarning | null
   parsedUrl: string | null
   onSwitchSuggestedKind: (kind: DecoderKind) => void
-  onCopyTextResult: () => Promise<boolean>
+  onDownloadResult: (blob: Blob, filename: string) => void
+  onCopyTextResult: () => Promise<void> | void
 }
 
 function inputModeLabel(mode: DecodeResult['inputMode'], t: (key: string) => string): string {
@@ -23,6 +24,7 @@ export function DecoderOutputCard({
   mismatchWarning,
   parsedUrl,
   onSwitchSuggestedKind,
+  onDownloadResult,
   onCopyTextResult,
 }: DecoderOutputCardProps) {
   const { t } = useI18n()
@@ -69,7 +71,7 @@ export function DecoderOutputCard({
           />
 
           <div className="button-row">
-            <button onClick={() => triggerDownload(result.blob, result.filename)}>{t('decoders.action.download')}</button>
+            <button onClick={() => onDownloadResult(result.blob, result.filename)}>{t('decoders.action.download')}</button>
             {result.previewKind === 'text' && (
               <button type="button" className="button-ghost" onClick={onCopyTextResult}>
                 {t('decoders.action.copyText')}

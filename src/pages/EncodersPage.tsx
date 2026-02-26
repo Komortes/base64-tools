@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { EncoderOutputCard } from '../components/encoders/EncoderOutputCard'
 import { EncoderSourceCard } from '../components/encoders/EncoderSourceCard'
 import { ModeSelector } from '../components/codec/ModeSelector'
@@ -5,9 +6,11 @@ import { ENCODER_CONFIGS } from '../configs/encoders'
 import { useEncodersState } from '../hooks/useEncodersState'
 import { useI18n } from '../i18n/useI18n'
 import { encoderLabel, encoderPlaceholder } from '../i18n/toolStrings'
+import { useToastStore } from '../store/toast'
 
 export function EncodersPage() {
   const { t } = useI18n()
+  const pushToast = useToastStore((state) => state.pushToast)
   const {
     kind,
     config,
@@ -35,6 +38,31 @@ export function EncodersPage() {
     downloadBase64,
     clearAll,
   } = useEncodersState()
+
+  useEffect(() => {
+    if (!error) {
+      return
+    }
+
+    pushToast({ kind: 'error', message: error })
+  }, [error, pushToast])
+
+  const handleCopyBase64 = async () => {
+    const success = await copyBase64()
+    pushToast({
+      kind: success ? 'success' : 'error',
+      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
+    })
+  }
+
+  const handleDownloadBase64 = () => {
+    try {
+      downloadBase64()
+      pushToast({ kind: 'success', message: t('toast.downloadSuccess') })
+    } catch {
+      pushToast({ kind: 'error', message: t('toast.downloadError') })
+    }
+  }
 
   return (
     <section className="tool-panel">
@@ -74,11 +102,11 @@ export function EncodersPage() {
       <EncoderOutputCard
         base64Output={base64Output}
         onBase64OutputChange={setBase64Output}
-        onCopyBase64={copyBase64}
-        onDownloadBase64={downloadBase64}
+        onCopyBase64={handleCopyBase64}
+        onDownloadBase64={handleDownloadBase64}
       />
 
-      {error && <p className="message error">{error}</p>}
+      {error && <p className="message error" role="alert">{error}</p>}
     </section>
   )
 }

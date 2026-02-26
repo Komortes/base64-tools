@@ -8,6 +8,7 @@ import { extensionFromMime, type PreviewKind } from '../utils/fileType'
 import { useObjectUrlLifecycle } from '../hooks/useObjectUrlLifecycle'
 import { buildBinaryPreview } from '../utils/decodedPreview'
 import { useI18n } from '../i18n/useI18n'
+import { useToastStore } from '../store/toast'
 
 interface DataUrlPreviewState {
   blob?: Blob
@@ -21,6 +22,7 @@ interface DataUrlPreviewState {
 
 export function DataUrlToolsPage() {
   const { t } = useI18n()
+  const pushToast = useToastStore((state) => state.pushToast)
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
   const [previewState, setPreviewState] = useState<DataUrlPreviewState | null>(null)
@@ -96,6 +98,14 @@ export function DataUrlToolsPage() {
     }
   }, [parsed, revokeObjectUrl, setObjectUrl])
 
+  useEffect(() => {
+    if (!error) {
+      return
+    }
+
+    pushToast({ kind: 'error', message: error })
+  }, [error, pushToast])
+
   const handleCopyPayload = async () => {
     setError('')
     if (!parsed) {
@@ -103,7 +113,11 @@ export function DataUrlToolsPage() {
       return
     }
 
-    await copyToClipboard(parsed.payload)
+    const success = await copyToClipboard(parsed.payload)
+    pushToast({
+      kind: success ? 'success' : 'error',
+      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
+    })
   }
 
   const handleDownload = () => {
@@ -114,14 +128,20 @@ export function DataUrlToolsPage() {
       return
     }
 
-    if (parsed.isBase64 && previewState.blob) {
-      triggerDownload(previewState.blob, `data-url-payload.${previewState.extension}`)
-      return
-    }
+    try {
+      if (parsed.isBase64 && previewState.blob) {
+        triggerDownload(previewState.blob, `data-url-payload.${previewState.extension}`)
+        pushToast({ kind: 'success', message: t('toast.downloadSuccess') })
+        return
+      }
 
-    const text = decodeDataUrlTextPayload(parsed.payload)
-    const blob = new Blob([text], { type: previewState.mime || 'text/plain;charset=utf-8' })
-    triggerDownload(blob, `data-url-text.${previewState.extension}`)
+      const text = decodeDataUrlTextPayload(parsed.payload)
+      const blob = new Blob([text], { type: previewState.mime || 'text/plain;charset=utf-8' })
+      triggerDownload(blob, `data-url-text.${previewState.extension}`)
+      pushToast({ kind: 'success', message: t('toast.downloadSuccess') })
+    } catch {
+      pushToast({ kind: 'error', message: t('toast.downloadError') })
+    }
   }
 
   return (
@@ -138,7 +158,7 @@ export function DataUrlToolsPage() {
         placeholder={t('dataUrl.input.placeholder')}
       />
 
-      {!parsed && input.trim() && <p className="message error">{t('dataUrl.error.invalidFormat')}</p>}
+      {!parsed && input.trim() && <p className="message error" role="alert">{t('dataUrl.error.invalidFormat')}</p>}
 
       {parsed && (
         <div className="preview-card">
@@ -172,7 +192,7 @@ export function DataUrlToolsPage() {
         </div>
       )}
 
-      {error && <p className="message error">{error}</p>}
+      {error && <p className="message error" role="alert">{error}</p>}
     </section>
   )
 }
