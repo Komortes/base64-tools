@@ -6,7 +6,7 @@ import {
   type FileInputMode,
 } from '../configs/encoders'
 import { blobToBase64, bytesToBase64 } from '../utils/base64'
-import { triggerDownload } from '../utils/blob'
+import { bytesToSize, triggerDownload } from '../utils/blob'
 import { encodeBytesToBase64InWorker } from '../utils/base64Worker'
 import { copyToClipboard } from '../utils/clipboard'
 import { hexToBytes } from '../utils/hex'
