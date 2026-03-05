@@ -36,6 +36,12 @@
     grid-template-columns: 1fr;
   }
 
+  .toast-region {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+  }
+
   .pdf-preview {
     min-height: 420px;
   }

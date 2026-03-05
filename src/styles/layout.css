@@ -155,8 +155,12 @@
   gap: 0.32rem;
 }
 
+.language-pack-grid {
+  grid-template-columns: 1fr;
+}
+
 .theme-pack-option {
-  min-height: 34px;
+  min-height: 38px;
   background: var(--sidebar-link-bg);
   border: 1px solid var(--sidebar-link-border);
   color: var(--sidebar-text);
@@ -164,10 +168,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.4rem;
-  font-size: 0.74rem;
-  line-height: 1;
+  padding: 0.3rem 0.42rem;
+  font-size: 0.78rem;
+  line-height: 1.18;
   text-align: center;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .theme-pack-option.is-active {
@@ -183,4 +189,56 @@
 
 .page-wrap {
   min-height: 70vh;
+}
+
+.toast-region {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: min(360px, calc(100vw - 1.5rem));
+  display: grid;
+  gap: 0.55rem;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in oklab, var(--panel) 86%, var(--accent) 14%);
+  box-shadow: 0 10px 22px rgba(15, 36, 58, 0.16);
+  color: var(--text-0);
+}
+
+.toast-item.is-success {
+  border-color: color-mix(in oklab, var(--status-ok) 40%, var(--line-strong) 60%);
+  background: color-mix(in oklab, var(--panel) 84%, var(--status-ok) 16%);
+}
+
+.toast-item.is-error {
+  border-color: color-mix(in oklab, var(--danger-fg) 40%, var(--line-strong) 60%);
+  background: color-mix(in oklab, var(--danger-bg) 88%, var(--panel) 12%);
+}
+
+.toast-item.is-info {
+  border-color: color-mix(in oklab, var(--accent) 38%, var(--line-strong) 62%);
+}
+
+.toast-item span {
+  line-height: 1.3;
+}
+
+.toast-close {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1;
 }

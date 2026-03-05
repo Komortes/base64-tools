@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 :root {
-  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
 
   --bg-0: #f3f6fb;
   --bg-1: #ecf3ff;
@@ -71,13 +69,13 @@
 }
 
 :root[data-theme='atlas'] {
-  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
 }
 
 :root[data-theme='terminal'] {
-  --font-sans: 'Space Grotesk', 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --font-sans: 'Space Grotesk', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
   --bg-0: #07100f;
   --bg-1: #0a1714;
   --bg-2: #0d1e19;
@@ -130,8 +128,8 @@
 }
 
 :root[data-theme='sunset'] {
-  --font-sans: 'Outfit', 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
   --bg-0: #fff1e7;
   --bg-1: #ffe4d8;
   --bg-2: #fff7e1;
@@ -237,9 +235,9 @@ textarea {
   line-height: 1.5;
 }
 
-textarea:focus,
-input:focus,
-select:focus {
+textarea:focus-visible,
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid #f9b45e;
   outline-offset: 1px;
   border-color: #f9b45e;
@@ -268,6 +266,19 @@ button:active {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+.side-link:focus-visible,
+.theme-pack-option:focus-visible,
+.mode-pill:focus-visible,
+.toggle-chip:focus-visible,
+.source-mode-button:focus-visible,
+.warning-tag:focus-visible,
+.toast-close:focus-visible {
+  outline: 2px solid #f9b45e;
+  outline-offset: 2px;
 }
 
 .button-ghost {

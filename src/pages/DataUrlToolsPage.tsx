@@ -7,6 +7,8 @@ import { decodeDataUrlTextPayload, parseDataUrl } from '../utils/dataUrl'
 import { extensionFromMime, type PreviewKind } from '../utils/fileType'
 import { useObjectUrlLifecycle } from '../hooks/useObjectUrlLifecycle'
 import { buildBinaryPreview } from '../utils/decodedPreview'
+import { useI18n } from '../i18n/useI18n'
+import { useToastStore } from '../store/toast'
 
 interface DataUrlPreviewState {
   blob?: Blob
@@ -19,6 +21,8 @@ interface DataUrlPreviewState {
 }
 
 export function DataUrlToolsPage() {
+  const { t } = useI18n()
+  const pushToast = useToastStore((state) => state.pushToast)
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
   const [previewState, setPreviewState] = useState<DataUrlPreviewState | null>(null)
@@ -94,70 +98,88 @@ export function DataUrlToolsPage() {
     }
   }, [parsed, revokeObjectUrl, setObjectUrl])
 
-  const handleCopyPayload = async () => {
-    setError('')
-    if (!parsed) {
-      setError('Input is not a valid data URL.')
+  useEffect(() => {
+    if (!error) {
       return
     }
 
-    await copyToClipboard(parsed.payload)
+    pushToast({ kind: 'error', message: error })
+  }, [error, pushToast])
+
+  const handleCopyPayload = async () => {
+    setError('')
+    if (!parsed) {
+      setError(t('dataUrl.error.invalidDataUrl'))
+      return
+    }
+
+    const success = await copyToClipboard(parsed.payload)
+    pushToast({
+      kind: success ? 'success' : 'error',
+      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
+    })
   }
 
   const handleDownload = () => {
     setError('')
 
     if (!parsed || !previewState) {
-      setError('Cannot download. Parse a valid data URL first.')
+      setError(t('dataUrl.error.cannotDownload'))
       return
     }
 
-    if (parsed.isBase64 && previewState.blob) {
-      triggerDownload(previewState.blob, `data-url-payload.${previewState.extension}`)
-      return
-    }
+    try {
+      if (parsed.isBase64 && previewState.blob) {
+        triggerDownload(previewState.blob, `data-url-payload.${previewState.extension}`)
+        pushToast({ kind: 'success', message: t('toast.downloadSuccess') })
+        return
+      }
 
-    const text = decodeDataUrlTextPayload(parsed.payload)
-    const blob = new Blob([text], { type: previewState.mime || 'text/plain;charset=utf-8' })
-    triggerDownload(blob, `data-url-text.${previewState.extension}`)
+      const text = decodeDataUrlTextPayload(parsed.payload)
+      const blob = new Blob([text], { type: previewState.mime || 'text/plain;charset=utf-8' })
+      triggerDownload(blob, `data-url-text.${previewState.extension}`)
+      pushToast({ kind: 'success', message: t('toast.downloadSuccess') })
+    } catch {
+      pushToast({ kind: 'error', message: t('toast.downloadError') })
+    }
   }
 
   return (
     <section className="tool-panel">
       <div className="panel-head">
-        <h2>Data URL Tools</h2>
-        <p>Supports data URLs with parameters and previews image/PDF/media/text payloads.</p>
+        <h2>{t('dataUrl.title')}</h2>
+        <p>{t('dataUrl.subtitle')}</p>
       </div>
 
       <textarea
         value={input}
         onChange={(event) => setInput(event.target.value)}
         rows={8}
-        placeholder="Paste data URL"
+        placeholder={t('dataUrl.input.placeholder')}
       />
 
-      {!parsed && input.trim() && <p className="message error">Input does not match data URL format.</p>}
+      {!parsed && input.trim() && <p className="message error" role="alert">{t('dataUrl.error.invalidFormat')}</p>}
 
       {parsed && (
         <div className="preview-card">
           <div className="meta-grid">
-            <p><strong>MIME:</strong> {previewState?.mime ?? parsed.mime}</p>
-            <p><strong>Media type:</strong> {parsed.mediaType}</p>
-            <p><strong>Encoding:</strong> {parsed.isBase64 ? 'base64' : 'plain/URL-encoded'}</p>
-            <p><strong>Payload length:</strong> {parsed.payload.length}</p>
+            <p><strong>{t('dataUrl.meta.mime')}</strong> {previewState?.mime ?? parsed.mime}</p>
+            <p><strong>{t('dataUrl.meta.mediaType')}</strong> {parsed.mediaType}</p>
+            <p><strong>{t('dataUrl.meta.encoding')}</strong> {parsed.isBase64 ? t('dataUrl.value.base64') : t('dataUrl.value.plain')}</p>
+            <p><strong>{t('dataUrl.meta.payloadLength')}</strong> {parsed.payload.length}</p>
             <p>
-              <strong>Parameters:</strong>{' '}
+              <strong>{t('dataUrl.meta.parameters')}</strong>{' '}
               {parsed.parameters.length
                 ? parsed.parameters.map((parameter) => parameter.raw).join('; ')
-                : 'none'}
+                : t('dataUrl.value.none')}
             </p>
-            <p><strong>Preview:</strong> {previewState?.previewKind ?? 'n/a'}</p>
-            <p><strong>Size:</strong> {previewState?.sizeBytes ? bytesToSize(previewState.sizeBytes) : 'n/a'}</p>
+            <p><strong>{t('dataUrl.meta.preview')}</strong> {previewState?.previewKind ?? t('dataUrl.value.na')}</p>
+            <p><strong>{t('dataUrl.meta.size')}</strong> {previewState?.sizeBytes ? bytesToSize(previewState.sizeBytes) : t('dataUrl.value.na')}</p>
           </div>
 
           <div className="button-row">
-            <button onClick={handleCopyPayload}>Copy payload</button>
-            <button className="button-ghost" onClick={handleDownload}>Download payload</button>
+            <button onClick={handleCopyPayload}>{t('dataUrl.action.copyPayload')}</button>
+            <button className="button-ghost" onClick={handleDownload}>{t('dataUrl.action.downloadPayload')}</button>
           </div>
 
           {previewState && (
@@ -170,7 +192,7 @@ export function DataUrlToolsPage() {
         </div>
       )}
 
-      {error && <p className="message error">{error}</p>}
+      {error && <p className="message error" role="alert">{error}</p>}
     </section>
   )
 }

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { normalizeBase64Input, toUrlSafeBase64, validateBase64 } from '../utils/base64'
 import { copyToClipboard } from '../utils/clipboard'
+import { useI18n } from '../i18n/useI18n'
+import { useToastStore } from '../store/toast'
 
 type HighlightLevel = 'error' | 'warning' | null
 
@@ -35,7 +37,11 @@ function visualizeChar(char: string): string {
   return char
 }
 
-function buildHighlightAnalysis(input: string, stripWhitespace: boolean): HighlightAnalysis {
+function buildHighlightAnalysis(
+  input: string,
+  stripWhitespace: boolean,
+  t: (key: string) => string,
+): HighlightAnalysis {
   const chars = [...input]
   const nonWhitespaceChars = chars.filter((char) => !isWhitespace(char))
   const hasStdAlphabet = nonWhitespaceChars.some((char) => char === '+' || char === '/')
@@ -56,13 +62,13 @@ function buildHighlightAnalysis(input: string, stripWhitespace: boolean): Highli
         tokens[index] = {
           char: visualizeChar(char),
           level: 'warning',
-          reason: 'Whitespace ignored',
+          reason: t('validator.reason.whitespaceIgnored'),
         }
       } else {
         tokens[index] = {
           char: visualizeChar(char),
           level: 'error',
-          reason: 'Whitespace is not valid Base64',
+          reason: t('validator.reason.whitespaceInvalid'),
         }
       }
       continue
@@ -72,7 +78,7 @@ function buildHighlightAnalysis(input: string, stripWhitespace: boolean): Highli
       tokens[index] = {
         char,
         level: 'error',
-        reason: 'Non-Base64 symbol',
+        reason: t('validator.reason.nonBase64'),
       }
       continue
     }
@@ -81,7 +87,7 @@ function buildHighlightAnalysis(input: string, stripWhitespace: boolean): Highli
       tokens[index] = {
         char,
         level: 'error',
-        reason: 'Mixed standard and URL-safe alphabets',
+        reason: t('validator.reason.mixedAlphabet'),
       }
       continue
     }
@@ -95,7 +101,7 @@ function buildHighlightAnalysis(input: string, stripWhitespace: boolean): Highli
         tokens[index] = {
           char,
           level: 'error',
-          reason: 'Padding must be at the end',
+          reason: t('validator.reason.paddingEnd'),
         }
       }
     }
@@ -110,14 +116,16 @@ function buildHighlightAnalysis(input: string, stripWhitespace: boolean): Highli
 }
 
 export function ValidatorPage() {
+  const { t } = useI18n()
+  const pushToast = useToastStore((state) => state.pushToast)
   const [input, setInput] = useState('')
   const [stripWhitespace, setStripWhitespace] = useState(true)
   const highlightRef = useRef<HTMLPreElement | null>(null)
 
   const result = useMemo(() => validateBase64(input, stripWhitespace), [input, stripWhitespace])
   const highlight = useMemo(
-    () => buildHighlightAnalysis(input, stripWhitespace),
-    [input, stripWhitespace],
+    () => buildHighlightAnalysis(input, stripWhitespace, t),
+    [input, stripWhitespace, t],
   )
 
   useEffect(() => {
@@ -145,7 +153,11 @@ export function ValidatorPage() {
   }, [highlight.firstErrorIndex, input, stripWhitespace])
 
   const copyNormalized = async () => {
-    await copyToClipboard(result.normalized)
+    const success = await copyToClipboard(result.normalized)
+    pushToast({
+      kind: success ? 'success' : 'error',
+      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
+    })
   }
 
   const applyNormalized = () => {
@@ -177,11 +189,30 @@ export function ValidatorPage() {
     setInput(fixed)
   }
 
+  const translatedFormat =
+    result.format === 'standard'
+      ? t('validator.format.standard')
+      : result.format === 'url-safe'
+        ? t('validator.format.url-safe')
+        : t('validator.format.mixed')
+
+  const translateValidationIssue = (issue: string): string => {
+    if (issue === 'Input is empty.') return t('validator.issue.inputEmpty')
+    if (issue === 'Input mixes standard and URL-safe alphabets.') return t('validator.issue.mixedAlphabet')
+    if (issue === 'Input contains non-Base64 characters.') return t('validator.issue.invalidChars')
+    if (issue === 'Padding must be only at the end.') return t('validator.issue.paddingAtEnd')
+    if (issue === 'Padding cannot contain more than 2 "=" characters.') return t('validator.issue.paddingTooLong')
+    if (issue === 'Invalid length: Base64 length modulo 4 cannot be 1.') return t('validator.issue.invalidLength')
+    if (issue === 'Length is not divisible by 4. Decoder may require padding.') return t('validator.issue.lengthWarning')
+    if (issue === 'Whitespace was ignored during validation.') return t('validator.issue.whitespaceIgnored')
+    return issue
+  }
+
   return (
     <section className="tool-panel">
       <div className="panel-head">
-        <h2>Base64 Validator</h2>
-        <p>Checks alphabet, length, padding, and URL-safe compatibility.</p>
+        <h2>{t('validator.title')}</h2>
+        <p>{t('validator.subtitle')}</p>
       </div>
 
       <label>
@@ -190,29 +221,29 @@ export function ValidatorPage() {
           checked={stripWhitespace}
           onChange={(event) => setStripWhitespace(event.target.checked)}
         />
-        Ignore whitespace
+        {t('validator.ignoreWhitespace')}
       </label>
 
       <textarea
         value={input}
         onChange={(event) => setInput(event.target.value)}
         rows={9}
-        placeholder="Paste Base64"
+        placeholder={t('validator.input.placeholder')}
       />
 
       {!!input && (
         <div className="button-row">
           <button type="button" className="button-ghost" onClick={fixPadding}>
-            Fix padding
+            {t('validator.action.fixPadding')}
           </button>
           <button type="button" className="button-ghost" onClick={convertToUrlSafe}>
-            Convert URL-safe
+            {t('validator.action.convertUrlSafe')}
           </button>
           <button type="button" className="button-ghost" onClick={removeWhitespace}>
-            Remove whitespace
+            {t('validator.action.removeWhitespace')}
           </button>
           <button type="button" className="button-ghost" onClick={applyNormalized}>
-            Apply normalized
+            {t('validator.action.applyNormalized')}
           </button>
         </div>
       )}
@@ -220,20 +251,20 @@ export function ValidatorPage() {
       {!!input && (
         <div className="preview-card">
           <p className={`validation-state ${result.isValid ? 'ok' : 'bad'}`}>
-            {result.isValid ? 'Valid Base64' : 'Invalid Base64'}
+            {result.isValid ? t('validator.state.valid') : t('validator.state.invalid')}
           </p>
 
           <div className="meta-grid">
-            <p><strong>Detected format:</strong> {result.format}</p>
-            <p><strong>Normalized length:</strong> {result.normalized.length}</p>
+            <p><strong>{t('validator.meta.detectedFormat')}</strong> {translatedFormat}</p>
+            <p><strong>{t('validator.meta.normalizedLength')}</strong> {result.normalized.length}</p>
             <p>
-              <strong>First error at:</strong>{' '}
-              {highlight.firstErrorIndex === null ? 'n/a' : highlight.firstErrorIndex + 1}
+              <strong>{t('validator.meta.firstError')}</strong>{' '}
+              {highlight.firstErrorIndex === null ? t('validator.meta.na') : highlight.firstErrorIndex + 1}
             </p>
           </div>
 
           <div className="validator-highlight-wrap">
-            <p className="field-label">Input map (errors/warnings)</p>
+            <p className="field-label">{t('validator.inputMap.title')}</p>
             <pre ref={highlightRef} className="validator-highlight" aria-live="polite">
               {highlight.tokens.map((token, index) => (
                 <span
@@ -251,24 +282,24 @@ export function ValidatorPage() {
               ))}
             </pre>
             <p className="validator-legend">
-              <span className="legend-chip is-error">Error</span>
-              <span className="legend-chip is-warning">Warning</span>
+              <span className="legend-chip is-error">{t('validator.legend.error')}</span>
+              <span className="legend-chip is-warning">{t('validator.legend.warning')}</span>
             </p>
           </div>
 
-          <label className="field-label">Normalized output</label>
+          <label className="field-label">{t('validator.normalizedOutput')}</label>
           <textarea readOnly rows={4} value={result.normalized} />
 
           <div className="button-row">
-            <button onClick={copyNormalized}>Copy normalized</button>
+            <button onClick={copyNormalized}>{t('validator.action.copyNormalized')}</button>
           </div>
 
           {result.errors.length > 0 && (
             <div>
-              <h3>Errors</h3>
+              <h3>{t('validator.errors')}</h3>
               <ul>
                 {result.errors.map((issue) => (
-                  <li key={issue}>{issue}</li>
+                  <li key={issue}>{translateValidationIssue(issue)}</li>
                 ))}
               </ul>
             </div>
@@ -276,10 +307,10 @@ export function ValidatorPage() {
 
           {result.warnings.length > 0 && (
             <div>
-              <h3>Warnings</h3>
+              <h3>{t('validator.warnings')}</h3>
               <ul>
                 {result.warnings.map((issue) => (
-                  <li key={issue}>{issue}</li>
+                  <li key={issue}>{translateValidationIssue(issue)}</li>
                 ))}
               </ul>
             </div>

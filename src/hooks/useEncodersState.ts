@@ -6,11 +6,12 @@ import {
   type FileInputMode,
 } from '../configs/encoders'
 import { blobToBase64, bytesToBase64 } from '../utils/base64'
-import { bytesToSize, triggerDownload } from '../utils/blob'
+import { triggerDownload } from '../utils/blob'
 import { encodeBytesToBase64InWorker } from '../utils/base64Worker'
 import { copyToClipboard } from '../utils/clipboard'
 import { hexToBytes } from '../utils/hex'
 import { filenameFromUrl } from '../utils/urlFile'
+import { useI18n } from '../i18n/useI18n'
 
 const WORKER_THRESHOLD_BYTES = 512 * 1024
 const REMOTE_FILE_TIMEOUT_MS = 15_000
@@ -110,6 +111,7 @@ interface EncodersStateActions {
 export interface UseEncodersStateResult extends EncodersStateValues, EncodersStateActions {}
 
 export function useEncodersState(): UseEncodersStateResult {
+  const { t } = useI18n()
   const [kind, setKind] = useState<EncoderKind>('text')
   const [textInput, setTextInputValue] = useState('')
   const [hexInput, setHexInputValue] = useState('')
@@ -181,7 +183,7 @@ export function useEncodersState(): UseEncodersStateResult {
     }
 
     if (config.mode !== 'file') {
-      setError('URL loading is available only for file-based encoders.')
+      setError(t('encoders.error.urlOnlyForFiles'))
       return
     }
 
@@ -214,8 +216,8 @@ export function useEncodersState(): UseEncodersStateResult {
           ? `Request timed out after ${Math.round(REMOTE_FILE_TIMEOUT_MS / 1000)} seconds.`
           : loadError instanceof Error
           ? loadError.message
-          : 'Failed to load file from URL.'
-      setError(`Cannot load by URL. ${message} This can fail if CORS is blocked.`)
+          : t('encoders.error.failedLoadUrl')
+      setError(t('encoders.error.loadByUrl', { message }))
     } finally {
       globalThis.clearTimeout(timeoutId)
       setLoadingRemoteFile(false)
@@ -226,7 +228,7 @@ export function useEncodersState(): UseEncodersStateResult {
     resetMessages()
 
     if (config.mode === 'file' && !selectedFile) {
-      setError('Choose a file before encoding.')
+      setError(t('encoders.error.chooseFile'))
       return
     }
 
@@ -239,7 +241,7 @@ export function useEncodersState(): UseEncodersStateResult {
       if (config.mode === 'file') {
         const fileToEncode = selectedFile
         if (!fileToEncode) {
-          throw new Error('Choose a file before encoding.')
+          throw new Error(t('encoders.error.chooseFile'))
         }
 
         encoded = await blobToBase64(fileToEncode)
@@ -263,7 +265,7 @@ export function useEncodersState(): UseEncodersStateResult {
       const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
       setBase64OutputValue(output)
     } catch (encodeError) {
-      const message = encodeError instanceof Error ? encodeError.message : 'Encode failed.'
+      const message = encodeError instanceof Error ? encodeError.message : t('encoders.error.encodeFailed')
       setError(message)
     } finally {
       setIsEncoding(false)
@@ -313,12 +315,4 @@ export function useEncodersState(): UseEncodersStateResult {
     downloadBase64,
     clearAll,
   }
-}
-
-export function selectedFileLabel(file: File | null): string {
-  if (!file) {
-    return 'No file selected'
-  }
-
-  return `Selected: ${file.name} (${bytesToSize(file.size)})`
 }

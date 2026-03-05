@@ -7,6 +7,8 @@ import { useObjectUrlLifecycle } from './useObjectUrlLifecycle'
 import { detectFileType, type PreviewKind } from '../utils/fileType'
 import { bytesToHex } from '../utils/hex'
 import { buildBinaryPreview } from '../utils/decodedPreview'
+import { useI18n } from '../i18n/useI18n'
+import { decoderLabel } from '../i18n/toolStrings'
 
 const SAFE_URL_PROTOCOLS = new Set(['http:', 'https:'])
 
@@ -69,6 +71,7 @@ function parseUrlValue(input: string): string | null {
 }
 
 export function useDecodersState(): UseDecodersStateResult {
+  const { t } = useI18n()
   const [kind, setKind] = useState<DecoderKind>('auto')
   const [input, setInputValue] = useState('')
   const [mimeOverride, setMimeOverrideValue] = useState('')
@@ -168,11 +171,10 @@ export function useDecodersState(): UseDecodersStateResult {
       if (expectedPreview && detected.previewKind !== expectedPreview) {
         const suggestedKind = kindFromPreview(detected.previewKind)
         if (suggestedKind !== kind) {
-          const suggestedConfig = DECODER_CONFIGS.find((entry) => entry.kind === suggestedKind)
           setMismatchWarning({
-            message: `Selected type does not match detected payload (${detected.mime}).`,
+            message: t('decoders.warning.typeMismatch', { mime: detected.mime }),
             suggestedKind,
-            suggestedLabel: suggestedConfig?.label ?? suggestedKind,
+            suggestedLabel: decoderLabel(suggestedKind, t),
           })
         }
       }
@@ -190,7 +192,7 @@ export function useDecodersState(): UseDecodersStateResult {
         detection,
       })
     } catch (decodeError) {
-      const message = decodeError instanceof Error ? decodeError.message : 'Decode failed.'
+      const message = decodeError instanceof Error ? decodeError.message : t('decoders.error.decodeFailed')
       setError(message)
     } finally {
       setIsDecoding(false)

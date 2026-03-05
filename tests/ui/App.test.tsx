@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, test } from 'vitest'
 import App from '../../src/App'
+import { usePreferencesStore } from '../../src/store/preferences'
 
 function renderApp(initialEntry: string) {
   return render(
@@ -14,6 +15,7 @@ function renderApp(initialEntry: string) {
 describe('App routing', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    usePreferencesStore.setState({ theme: 'atlas', locale: 'en' })
     document.documentElement.removeAttribute('data-theme')
   })
 
@@ -37,5 +39,23 @@ describe('App routing', () => {
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'terminal')
     expect(window.localStorage.getItem('base64-tools-theme')).toBe('terminal')
+  })
+
+  test('switches locale to russian and persists it', () => {
+    renderApp('/overview')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Russian' }))
+
+    expect(screen.getByRole('heading', { name: 'Быстрая Base64-рабочая область' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('base64-tools-locale')).toBe('ru')
+  })
+
+  test('switches locale to ukrainian and persists it', () => {
+    renderApp('/overview')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Ukrainian' }))
+
+    expect(screen.getByRole('heading', { name: 'Швидкий Base64 Workspace' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('base64-tools-locale')).toBe('uk')
   })
 })

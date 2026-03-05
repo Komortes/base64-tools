@@ -1,4 +1,5 @@
 import type { PreviewKind } from '../utils/fileType'
+import { useI18n } from '../i18n/useI18n'
 
 interface DecodedPreviewProps {
   previewKind: PreviewKind
@@ -7,12 +8,14 @@ interface DecodedPreviewProps {
 }
 
 export function DecodedPreview({ previewKind, objectUrl, textPreview }: DecodedPreviewProps) {
+  const { t } = useI18n()
+
   if (previewKind === 'image' && objectUrl) {
-    return <img src={objectUrl} alt="Decoded preview" className="image-preview" />
+    return <img src={objectUrl} alt={t('preview.alt.decoded')} className="image-preview" />
   }
 
   if (previewKind === 'pdf' && objectUrl) {
-    return <iframe src={objectUrl} title="PDF preview" className="pdf-preview" />
+    return <iframe src={objectUrl} title={t('preview.title.pdf')} className="pdf-preview" />
   }
 
   if (previewKind === 'video' && objectUrl) {
@@ -27,5 +30,5 @@ export function DecodedPreview({ previewKind, objectUrl, textPreview }: DecodedP
     return <pre className="text-preview">{textPreview.slice(0, 5000)}</pre>
   }
 
-  return <p className="hint-text">No browser preview for this type. Use download.</p>
+  return <p className="hint-text">{t('preview.none')}</p>
 }
