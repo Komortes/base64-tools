@@ -86,3 +86,24 @@ jobs:
 
       - name: Run e2e tests
         run: npm run test:e2e
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: checks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies (high+)
+        run: npm audit --audit-level=high

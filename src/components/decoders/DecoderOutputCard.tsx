@@ -55,7 +55,7 @@ export function DecoderOutputCard({
 
           {parsedUrl && (
             <p className="link-preview">
-              Parsed URL: <a href={parsedUrl} target="_blank" rel="noreferrer">{parsedUrl}</a>
+              Parsed URL: <a href={parsedUrl} target="_blank" rel="noopener noreferrer">{parsedUrl}</a>
             </p>
           )}
 

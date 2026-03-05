@@ -13,6 +13,68 @@ import { hexToBytes } from '../utils/hex'
 import { filenameFromUrl } from '../utils/urlFile'
 
 const WORKER_THRESHOLD_BYTES = 512 * 1024
+const REMOTE_FILE_TIMEOUT_MS = 15_000
+const MAX_REMOTE_FILE_BYTES = 25 * 1024 * 1024
+const REMOTE_FILE_PROTOCOLS = new Set(['http:', 'https:'])
+
+function parseRemoteFileUrl(input: string): URL | null {
+  try {
+    const url = new URL(input.trim())
+    if (!REMOTE_FILE_PROTOCOLS.has(url.protocol)) {
+      return null
+    }
+
+    return url
+  } catch {
+    return null
+  }
+}
+
+async function readResponseBlobWithLimit(response: Response, maxBytes: number): Promise<Blob> {
+  const contentType = response.headers.get('content-type') || ''
+  const contentLengthHeader = response.headers.get('content-length')
+  const declaredContentLength = contentLengthHeader
+    ? Number.parseInt(contentLengthHeader, 10)
+    : Number.NaN
+
+  if (Number.isFinite(declaredContentLength) && declaredContentLength > maxBytes) {
+    throw new Error(`Remote file is too large. Limit is ${bytesToSize(maxBytes)}.`)
+  }
+
+  if (!response.body) {
+    const blob = await response.blob()
+    if (blob.size > maxBytes) {
+      throw new Error(`Remote file is too large. Limit is ${bytesToSize(maxBytes)}.`)
+    }
+
+    return blob
+  }
+
+  const reader = response.body.getReader()
+  const chunks: BlobPart[] = []
+  let totalBytes = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) {
+      break
+    }
+
+    if (!value) {
+      continue
+    }
+
+    totalBytes += value.byteLength
+    if (totalBytes > maxBytes) {
+      await reader.cancel()
+      throw new Error(`Remote file is too large. Limit is ${bytesToSize(maxBytes)}.`)
+    }
+
+    chunks.push(new Uint8Array(value))
+  }
+
+  return new Blob(chunks, { type: contentType || undefined })
+}
 
 interface EncodersStateValues {
   kind: EncoderKind
@@ -112,8 +174,9 @@ export function useEncodersState(): UseEncodersStateResult {
   const handleLoadFromUrl = async () => {
     resetMessages()
 
-    if (!remoteFileUrl.trim()) {
-      setError('Enter a file URL first.')
+    const parsedRemoteUrl = parseRemoteFileUrl(remoteFileUrl)
+    if (!parsedRemoteUrl) {
+      setError('Enter a valid HTTP(S) file URL first.')
       return
     }
 
@@ -123,26 +186,38 @@ export function useEncodersState(): UseEncodersStateResult {
     }
 
     setLoadingRemoteFile(true)
+    const abortController = new AbortController()
+    const timeoutId = globalThis.setTimeout(() => {
+      abortController.abort()
+    }, REMOTE_FILE_TIMEOUT_MS)
 
     try {
-      const response = await fetch(remoteFileUrl.trim())
+      const response = await fetch(parsedRemoteUrl.toString(), {
+        signal: abortController.signal,
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+      })
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}.`)
       }
 
-      const blob = await response.blob()
+      const blob = await readResponseBlobWithLimit(response, MAX_REMOTE_FILE_BYTES)
       const fallbackName = `remote-${kind}`
-      const guessedName = filenameFromUrl(remoteFileUrl.trim(), fallbackName, config.extension)
+      const guessedName = filenameFromUrl(parsedRemoteUrl.toString(), fallbackName, config.extension)
       const mime = blob.type || config.defaultMime
       const file = new File([blob], guessedName, { type: mime })
       setSelectedFileValue(file)
     } catch (loadError) {
+      const timedOut = loadError instanceof DOMException && loadError.name === 'AbortError'
       const message =
-        loadError instanceof Error
+        timedOut
+          ? `Request timed out after ${Math.round(REMOTE_FILE_TIMEOUT_MS / 1000)} seconds.`
+          : loadError instanceof Error
           ? loadError.message
           : 'Failed to load file from URL.'
       setError(`Cannot load by URL. ${message} This can fail if CORS is blocked.`)
     } finally {
+      globalThis.clearTimeout(timeoutId)
       setLoadingRemoteFile(false)
     }
   }

@@ -8,6 +8,8 @@ import { detectFileType, type PreviewKind } from '../utils/fileType'
 import { bytesToHex } from '../utils/hex'
 import { buildBinaryPreview } from '../utils/decodedPreview'
 
+const SAFE_URL_PROTOCOLS = new Set(['http:', 'https:'])
+
 export interface DecodeResult {
   blob: Blob
   objectUrl?: string
@@ -57,6 +59,9 @@ function parseUrlValue(input: string): string | null {
 
   try {
     const url = new URL(candidate)
+    if (!SAFE_URL_PROTOCOLS.has(url.protocol)) {
+      return null
+    }
     return url.toString()
   } catch {
     return null
