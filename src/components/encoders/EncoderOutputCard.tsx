@@ -25,7 +25,7 @@ export function EncoderOutputCard({
         placeholder={t('encoders.output.placeholder')}
       />
       <div className="button-row">
-        <button onClick={onCopyBase64} disabled={!base64Output}>{t('encoders.output.copy')}</button>
+        <button type="button" onClick={onCopyBase64} disabled={!base64Output}>{t('encoders.output.copy')}</button>
         <button
           type="button"
           className="button-ghost"

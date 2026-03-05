@@ -198,7 +198,7 @@ export function validateBase64(input: string, stripWhitespace = true): Validatio
   const warnings: string[] = []
 
   if (!raw.length) {
-    errors.push('Input is empty.')
+    errors.push('EMPTY')
     return {
       isValid: false,
       format: 'standard',
@@ -211,35 +211,35 @@ export function validateBase64(input: string, stripWhitespace = true): Validatio
   const format = inferFormat(raw)
 
   if (format === 'mixed') {
-    errors.push('Input mixes standard and URL-safe alphabets.')
+    errors.push('MIXED_ALPHABET')
   }
 
   const alphabetRegex = format === 'url-safe' ? BASE64_URL_REGEX : BASE64_STD_REGEX
   if (!alphabetRegex.test(raw)) {
-    errors.push('Input contains non-Base64 characters.')
+    errors.push('INVALID_CHARS')
   }
 
   const firstPaddingIndex = raw.indexOf('=')
   if (firstPaddingIndex !== -1 && /[^=]/.test(raw.slice(firstPaddingIndex))) {
-    errors.push('Padding must be only at the end.')
+    errors.push('PADDING_NOT_AT_END')
   }
 
   const paddingMatches = raw.match(/=+$/)
   const paddingLength = paddingMatches ? paddingMatches[0].length : 0
   if (paddingLength > 2) {
-    errors.push('Padding cannot contain more than 2 "=" characters.')
+    errors.push('PADDING_TOO_LONG')
   }
 
   if (raw.length % 4 === 1) {
-    errors.push('Invalid length: Base64 length modulo 4 cannot be 1.')
+    errors.push('INVALID_LENGTH')
   }
 
   if (raw.length % 4 !== 0) {
-    warnings.push('Length is not divisible by 4. Decoder may require padding.')
+    warnings.push('LENGTH_NOT_DIVISIBLE_BY_4')
   }
 
   if (stripWhitespace && /\s/.test(input)) {
-    warnings.push('Whitespace was ignored during validation.')
+    warnings.push('WHITESPACE_IGNORED')
   }
 
   const normalized = normalizeBase64Input(raw, {

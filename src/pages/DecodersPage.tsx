@@ -85,8 +85,6 @@ export function DecodersPage() {
         onDownloadResult={handleDownloadResult}
         onCopyTextResult={handleCopyTextResult}
       />
-
-      {error && <p className="message error" role="alert">{error}</p>}
     </section>
   )
 }

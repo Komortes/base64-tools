@@ -191,8 +191,6 @@ export function DataUrlToolsPage() {
           )}
         </div>
       )}
-
-      {error && <p className="message error" role="alert">{error}</p>}
     </section>
   )
 }

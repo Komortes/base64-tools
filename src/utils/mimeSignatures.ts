@@ -72,7 +72,13 @@ export function detectMimeFromMagic(bytes: Uint8Array): string | null {
   }
 
   if (startsWith(bytes, [0x7b]) || startsWith(bytes, [0x5b])) {
-    return 'application/json'
+    const sample = bytes.slice(0, Math.min(bytes.length, 64))
+    const looksTextual = sample.every(
+      (byte) => byte === 9 || byte === 10 || byte === 13 || (byte >= 32 && byte <= 126),
+    )
+    if (looksTextual) {
+      return 'application/json'
+    }
   }
 
   return null

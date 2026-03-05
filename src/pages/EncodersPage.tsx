@@ -105,8 +105,6 @@ export function EncodersPage() {
         onCopyBase64={handleCopyBase64}
         onDownloadBase64={handleDownloadBase64}
       />
-
-      {error && <p className="message error" role="alert">{error}</p>}
     </section>
   )
 }

@@ -196,16 +196,20 @@ export function ValidatorPage() {
         ? t('validator.format.url-safe')
         : t('validator.format.mixed')
 
-  const translateValidationIssue = (issue: string): string => {
-    if (issue === 'Input is empty.') return t('validator.issue.inputEmpty')
-    if (issue === 'Input mixes standard and URL-safe alphabets.') return t('validator.issue.mixedAlphabet')
-    if (issue === 'Input contains non-Base64 characters.') return t('validator.issue.invalidChars')
-    if (issue === 'Padding must be only at the end.') return t('validator.issue.paddingAtEnd')
-    if (issue === 'Padding cannot contain more than 2 "=" characters.') return t('validator.issue.paddingTooLong')
-    if (issue === 'Invalid length: Base64 length modulo 4 cannot be 1.') return t('validator.issue.invalidLength')
-    if (issue === 'Length is not divisible by 4. Decoder may require padding.') return t('validator.issue.lengthWarning')
-    if (issue === 'Whitespace was ignored during validation.') return t('validator.issue.whitespaceIgnored')
-    return issue
+  const ISSUE_CODE_KEYS: Record<string, string> = {
+    EMPTY: 'validator.issue.inputEmpty',
+    MIXED_ALPHABET: 'validator.issue.mixedAlphabet',
+    INVALID_CHARS: 'validator.issue.invalidChars',
+    PADDING_NOT_AT_END: 'validator.issue.paddingAtEnd',
+    PADDING_TOO_LONG: 'validator.issue.paddingTooLong',
+    INVALID_LENGTH: 'validator.issue.invalidLength',
+    LENGTH_NOT_DIVISIBLE_BY_4: 'validator.issue.lengthWarning',
+    WHITESPACE_IGNORED: 'validator.issue.whitespaceIgnored',
+  }
+
+  const translateValidationIssue = (code: string): string => {
+    const key = ISSUE_CODE_KEYS[code]
+    return key ? t(key) : code
   }
 
   return (

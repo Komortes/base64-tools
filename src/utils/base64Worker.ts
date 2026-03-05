@@ -63,6 +63,7 @@ export async function encodeBytesToBase64InWorker(bytes: Uint8Array): Promise<st
       reject(new Error(event.message || 'Base64 worker crashed.'))
     }
 
-    worker.postMessage({ buffer: bytes.slice().buffer })
+    const copy = bytes.slice()
+    worker.postMessage({ buffer: copy.buffer }, [copy.buffer])
   })
 }

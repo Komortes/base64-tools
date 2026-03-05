@@ -208,6 +208,7 @@ export function useDecodersState(): UseDecodersStateResult {
     revokeObjectUrl()
 
     setInputValue('')
+    setMimeOverrideValue('')
     setResult(null)
     setMismatchWarning(null)
     setError('')

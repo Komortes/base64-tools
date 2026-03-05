@@ -12,10 +12,6 @@ export function hexToBytes(input: string): Uint8Array {
     throw new Error('Hex input is empty.')
   }
 
-  if (!/^[a-fA-F0-9]+$/.test(normalized)) {
-    throw new Error('Hex contains invalid characters.')
-  }
-
   if (normalized.length % 2 !== 0) {
     throw new Error('Hex length must be even.')
   }

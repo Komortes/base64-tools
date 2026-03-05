@@ -50,7 +50,7 @@ test('validateBase64 returns warnings for stripped whitespace', () => {
 
   assert.equal(result.isValid, true)
   assert.equal(result.format, 'standard')
-  assert.ok(result.warnings.some((warning) => warning.includes('Whitespace was ignored')))
+  assert.ok(result.warnings.some((warning) => warning === 'WHITESPACE_IGNORED'))
 })
 
 test('validateBase64 marks invalid alphabet and mixed format', () => {
@@ -58,9 +58,9 @@ test('validateBase64 marks invalid alphabet and mixed format', () => {
   const mixedAlphabet = validateBase64('ab-c/', true)
 
   assert.equal(invalidChars.isValid, false)
-  assert.ok(invalidChars.errors.some((error) => error.includes('non-Base64 characters')))
+  assert.ok(invalidChars.errors.some((error) => error === 'INVALID_CHARS'))
   assert.equal(mixedAlphabet.isValid, false)
-  assert.ok(mixedAlphabet.errors.some((error) => error.includes('mixes standard and URL-safe')))
+  assert.ok(mixedAlphabet.errors.some((error) => error === 'MIXED_ALPHABET'))
 })
 
 test('bytesToBase64 handles large payloads with chunking', () => {

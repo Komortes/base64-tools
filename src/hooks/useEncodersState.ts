@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ENCODER_CONFIGS,
   type EncoderConfig,
@@ -161,7 +161,23 @@ export function useEncodersState(): UseEncodersStateResult {
     setWithDataUrlPrefix((prev) => !prev)
   }
 
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  const abortInflight = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      abortInflight()
+    }
+  }, [abortInflight])
+
   const handleTypeChange = (nextType: EncoderKind) => {
+    abortInflight()
     setKind(nextType)
     setTextInputValue('')
     setHexInputValue('')
@@ -170,6 +186,7 @@ export function useEncodersState(): UseEncodersStateResult {
     setRemoteFileUrlValue('')
     setLoadingRemoteFile(false)
     setBase64OutputValue('')
+    setWithDataUrlPrefix(false)
     resetMessages()
   }
 
@@ -188,7 +205,9 @@ export function useEncodersState(): UseEncodersStateResult {
     }
 
     setLoadingRemoteFile(true)
+    abortInflight()
     const abortController = new AbortController()
+    abortControllerRef.current = abortController
     const timeoutId = globalThis.setTimeout(() => {
       abortController.abort()
     }, REMOTE_FILE_TIMEOUT_MS)
@@ -280,11 +299,13 @@ export function useEncodersState(): UseEncodersStateResult {
   }
 
   const clearAll = () => {
+    abortInflight()
     setTextInputValue('')
     setHexInputValue('')
     setSelectedFileValue(null)
     setRemoteFileUrlValue('')
     setBase64OutputValue('')
+    setWithDataUrlPrefix(false)
     resetMessages()
   }
 
