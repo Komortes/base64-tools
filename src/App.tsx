@@ -10,7 +10,6 @@ import type { Locale } from './i18n/translations'
 import { usePreferencesStore, type ThemePack } from './store/preferences'
 import { ToastRegion } from './components/ToastRegion'
 
-const THEME_STORAGE_KEY = 'base64-tools-theme'
 const THEME_OPTIONS: Array<{ id: ThemePack; labelKey: string }> = [
   { id: 'atlas', labelKey: 'app.theme.atlas' },
   { id: 'terminal', labelKey: 'app.theme.terminal' },
@@ -29,7 +28,6 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
   }, [theme])
 
   const navSections = [

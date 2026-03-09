@@ -129,27 +129,39 @@ export function useEncodersState(): UseEncodersStateResult {
     [kind],
   )
 
+  const clearOutputAndMessages = () => {
+    setBase64OutputValue('')
+    setError('')
+  }
+
   const resetMessages = () => {
     setError('')
   }
 
   const setTextInput = (value: string) => {
+    clearOutputAndMessages()
     setTextInputValue(value)
   }
 
   const setHexInput = (value: string) => {
+    clearOutputAndMessages()
     setHexInputValue(value)
   }
 
   const setFileInputMode = (value: FileInputMode) => {
+    clearOutputAndMessages()
     setFileInputModeValue(value)
+    setSelectedFileValue(null)
+    setRemoteFileUrlValue('')
   }
 
   const setSelectedFile = (file: File | null) => {
+    clearOutputAndMessages()
     setSelectedFileValue(file)
   }
 
   const setRemoteFileUrl = (value: string) => {
+    clearOutputAndMessages()
     setRemoteFileUrlValue(value)
   }
 
@@ -158,6 +170,7 @@ export function useEncodersState(): UseEncodersStateResult {
   }
 
   const toggleWithDataUrlPrefix = () => {
+    setBase64OutputValue('')
     setWithDataUrlPrefix((prev) => !prev)
   }
 
@@ -191,20 +204,23 @@ export function useEncodersState(): UseEncodersStateResult {
   }
 
   const handleLoadFromUrl = async () => {
-    resetMessages()
+    clearOutputAndMessages()
 
     const parsedRemoteUrl = parseRemoteFileUrl(remoteFileUrl)
     if (!parsedRemoteUrl) {
+      setSelectedFileValue(null)
       setError('Enter a valid HTTP(S) file URL first.')
       return
     }
 
     if (config.mode !== 'file') {
+      setSelectedFileValue(null)
       setError(t('encoders.error.urlOnlyForFiles'))
       return
     }
 
     setLoadingRemoteFile(true)
+    setSelectedFileValue(null)
     abortInflight()
     const abortController = new AbortController()
     abortControllerRef.current = abortController
@@ -229,6 +245,7 @@ export function useEncodersState(): UseEncodersStateResult {
       const file = new File([blob], guessedName, { type: mime })
       setSelectedFileValue(file)
     } catch (loadError) {
+      setSelectedFileValue(null)
       const timedOut = loadError instanceof DOMException && loadError.name === 'AbortError'
       const message =
         timedOut
@@ -239,12 +256,16 @@ export function useEncodersState(): UseEncodersStateResult {
       setError(t('encoders.error.loadByUrl', { message }))
     } finally {
       globalThis.clearTimeout(timeoutId)
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+      }
       setLoadingRemoteFile(false)
     }
   }
 
   const handleEncode = async () => {
     resetMessages()
+    setBase64OutputValue('')
 
     if (config.mode === 'file' && !selectedFile) {
       setError(t('encoders.error.chooseFile'))

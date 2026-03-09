@@ -5,8 +5,6 @@ import './init'
 import i18n from './init'
 import type { TranslationParams } from './translations'
 
-const LEGACY_LOCALE_STORAGE_KEY = 'base64-tools-locale'
-
 export function useI18n() {
   const locale = usePreferencesStore((state) => state.locale)
   const setLocale = usePreferencesStore((state) => state.setLocale)
@@ -18,9 +16,6 @@ export function useI18n() {
     }
 
     document.documentElement.lang = locale
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, locale)
-    }
   }, [locale])
 
   const t = useMemo(

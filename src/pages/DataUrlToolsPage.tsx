@@ -20,6 +20,10 @@ interface DataUrlPreviewState {
   textPreview: string | null
 }
 
+function utf8ByteLength(value: string): number {
+  return new TextEncoder().encode(value).length
+}
+
 export function DataUrlToolsPage() {
   const { t } = useI18n()
   const pushToast = useToastStore((state) => state.pushToast)
@@ -52,7 +56,7 @@ export function DataUrlToolsPage() {
           previewKind: 'text',
           mime: parsed.mime || 'text/plain;charset=utf-8',
           extension: extensionFromMime(parsed.mime || 'text/plain;charset=utf-8'),
-          sizeBytes: decodedText.length,
+          sizeBytes: utf8ByteLength(decodedText),
           textPreview: decodedText,
         })
         return
@@ -174,7 +178,7 @@ export function DataUrlToolsPage() {
                 : t('dataUrl.value.none')}
             </p>
             <p><strong>{t('dataUrl.meta.preview')}</strong> {previewState?.previewKind ?? t('dataUrl.value.na')}</p>
-            <p><strong>{t('dataUrl.meta.size')}</strong> {previewState?.sizeBytes ? bytesToSize(previewState.sizeBytes) : t('dataUrl.value.na')}</p>
+            <p><strong>{t('dataUrl.meta.size')}</strong> {previewState?.sizeBytes != null ? bytesToSize(previewState.sizeBytes) : t('dataUrl.value.na')}</p>
           </div>
 
           <div className="button-row">

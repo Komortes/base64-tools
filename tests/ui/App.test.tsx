@@ -4,6 +4,17 @@ import { beforeEach, describe, expect, test } from 'vitest'
 import App from '../../src/App'
 import { usePreferencesStore } from '../../src/store/preferences'
 
+function readPersistedPreferences() {
+  const raw = window.localStorage.getItem('base64-tools-preferences')
+  expect(raw).not.toBeNull()
+  return JSON.parse(raw ?? '{}') as {
+    state?: {
+      theme?: string
+      locale?: string
+    }
+  }
+}
+
 function renderApp(initialEntry: string) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -38,7 +49,8 @@ describe('App routing', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Terminal' }))
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'terminal')
-    expect(window.localStorage.getItem('base64-tools-theme')).toBe('terminal')
+    expect(window.localStorage.getItem('base64-tools-theme')).toBeNull()
+    expect(readPersistedPreferences().state?.theme).toBe('terminal')
   })
 
   test('switches locale to russian and persists it', () => {
@@ -47,7 +59,8 @@ describe('App routing', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Russian' }))
 
     expect(screen.getByRole('heading', { name: 'Быстрая Base64-рабочая область' })).toBeInTheDocument()
-    expect(window.localStorage.getItem('base64-tools-locale')).toBe('ru')
+    expect(window.localStorage.getItem('base64-tools-locale')).toBeNull()
+    expect(readPersistedPreferences().state?.locale).toBe('ru')
   })
 
   test('switches locale to ukrainian and persists it', () => {
@@ -56,6 +69,7 @@ describe('App routing', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Ukrainian' }))
 
     expect(screen.getByRole('heading', { name: 'Швидкий Base64 Workspace' })).toBeInTheDocument()
-    expect(window.localStorage.getItem('base64-tools-locale')).toBe('uk')
+    expect(window.localStorage.getItem('base64-tools-locale')).toBeNull()
+    expect(readPersistedPreferences().state?.locale).toBe('uk')
   })
 })
