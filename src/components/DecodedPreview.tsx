@@ -26,7 +26,7 @@ export function DecodedPreview({ previewKind, objectUrl, textPreview }: DecodedP
     return <audio src={objectUrl} controls className="audio-preview" />
   }
 
-  if (previewKind === 'text' && textPreview !== null) {
+  if (previewKind === 'text' && textPreview != null) {
     return <pre className="text-preview">{textPreview.slice(0, 5000)}</pre>
   }
 
