@@ -17,7 +17,9 @@
   position: sticky;
   top: 1.1rem;
   height: fit-content;
-  display: grid;
+  min-height: min(500px, 80vh);
+  display: flex;
+  flex-direction: column;
   gap: 0.95rem;
 }
 
@@ -84,38 +86,40 @@
   padding: 0.5rem 0.65rem;
   font-weight: 500;
   position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
-}
-
-.side-link::after {
-  content: '';
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 4px;
-  height: 2px;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--accent) 75%, #fff 25%);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 200ms ease;
 }
 
 .side-link:hover {
   border-color: color-mix(in oklab, var(--sidebar-link-border) 55%, #fff 45%);
   background: var(--sidebar-link-hover);
-  transform: translateX(2px);
-}
-
-.side-link:hover::after {
-  transform: scaleX(1);
+  transform: translateX(3px);
 }
 
 .side-link.is-active {
   border-color: var(--sidebar-active-border);
   background: var(--sidebar-active-bg);
   color: var(--sidebar-text);
+}
+
+.side-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--sidebar-active-border);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+
+.side-link.is-active::before {
+  transform: scaleY(1);
 }
 
 .privacy-card {
@@ -155,12 +159,9 @@
   gap: 0.32rem;
 }
 
-.language-pack-grid {
-  grid-template-columns: 1fr;
-}
-
 .theme-pack-option {
-  min-height: 38px;
+  min-height: 32px;
+  min-width: 32px;
   background: var(--sidebar-link-bg);
   border: 1px solid var(--sidebar-link-border);
   color: var(--sidebar-text);
@@ -179,6 +180,11 @@
 .theme-pack-option.is-active {
   border-color: var(--sidebar-active-border);
   background: var(--sidebar-active-bg);
+}
+
+.theme-pack-option:active {
+  transform: scale(0.92);
+  transition: transform 80ms ease;
 }
 
 .workspace {
@@ -241,4 +247,30 @@
   border-radius: 8px;
   font-size: 1rem;
   line-height: 1;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid var(--sidebar-border);
+  opacity: 0.4;
+  margin: 0;
+}
+
+.sidebar-footer {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sidebar-footer-privacy {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--sidebar-muted);
+}
+
+.sidebar-footer-privacy svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
 }
