@@ -10,6 +10,36 @@ import type { Locale } from './i18n/translations'
 import { usePreferencesStore, type ThemePack } from './store/preferences'
 import { ToastRegion } from './components/ToastRegion'
 
+const NAV_ICONS: Record<string, React.ReactNode> = {
+  '/overview': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+    </svg>
+  ),
+  '/encoders': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" />
+    </svg>
+  ),
+  '/decoders': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="11 17 6 12 11 7" /><polyline points="18 17 13 12 18 7" />
+    </svg>
+  ),
+  '/tools/data-url': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  ),
+  '/tools/validator': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  ),
+}
+
 const THEME_OPTIONS: Array<{ id: ThemePack; labelKey: string }> = [
   { id: 'atlas', labelKey: 'app.theme.atlas' },
   { id: 'terminal', labelKey: 'app.theme.terminal' },
@@ -64,6 +94,8 @@ function App() {
           </h1>
         </div>
 
+        <hr className="sidebar-divider" />
+
         {navSections.map((section) => (
           <section key={section.title} className="sidebar-section">
             <h2>{section.title}</h2>
@@ -74,6 +106,7 @@ function App() {
                   to={item.to}
                   className={({ isActive }) => `side-link${isActive ? ' is-active' : ''}`}
                 >
+                  {NAV_ICONS[item.to]}
                   {item.label}
                 </NavLink>
               ))}
@@ -81,13 +114,17 @@ function App() {
           </section>
         ))}
 
-        <article className="privacy-card">
-          <h3>{t('app.privacy.title')}</h3>
-          <p>{t('app.privacy.body')}</p>
-        </article>
+        <hr className="sidebar-divider" />
 
-        <article className="theme-card">
-          <h3>{t('app.theme.title')}</h3>
+        <div className="sidebar-footer">
+          <div className="sidebar-footer-privacy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>Runs locally, no server</span>
+          </div>
+
           <div className="theme-pack-grid" role="radiogroup" aria-label={t('app.theme.selector')}>
             {THEME_OPTIONS.map((option) => (
               <button
@@ -96,17 +133,15 @@ function App() {
                 className={`theme-pack-option${theme === option.id ? ' is-active' : ''}`}
                 role="radio"
                 aria-checked={theme === option.id}
+                aria-label={t(option.labelKey)}
                 onClick={() => setTheme(option.id)}
               >
-                {t(option.labelKey)}
+                {option.id === 'atlas' ? 'A' : option.id === 'terminal' ? 'T' : 'S'}
               </button>
             ))}
           </div>
-        </article>
 
-        <article className="theme-card">
-          <h3>{t('app.language.title')}</h3>
-          <div className="theme-pack-grid language-pack-grid" role="radiogroup" aria-label={t('app.language.selector')}>
+          <div className="theme-pack-grid" role="radiogroup" aria-label={t('app.language.selector')}>
             {LOCALE_OPTIONS.map((option) => (
               <button
                 key={option.id}
@@ -114,13 +149,14 @@ function App() {
                 className={`theme-pack-option${locale === option.id ? ' is-active' : ''}`}
                 role="radio"
                 aria-checked={locale === option.id}
+                aria-label={t(option.labelKey)}
                 onClick={() => setLocale(option.id)}
               >
-                {t(option.labelKey)}
+                {option.id.toUpperCase()}
               </button>
             ))}
           </div>
-        </article>
+        </div>
       </aside>
 
       <div className="workspace">
