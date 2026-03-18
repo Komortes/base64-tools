@@ -6,6 +6,7 @@
   box-shadow: var(--panel-shadow);
   display: grid;
   gap: 1.05rem;
+  animation: fade-in 200ms ease both;
 }
 
 .panel-head {
