@@ -46,9 +46,6 @@ export const en: Dictionary = {
   'overview.map.dataUrl.desc': 'Parse payload, inspect metadata, and extract clean content.',
   'overview.map.validator.title': 'Validator',
   'overview.map.validator.desc': 'Check invalid symbols, bad padding, and normalization issues.',
-  'overview.performance.title': 'Performance Note',
-  'overview.performance.body': 'For very large payloads, use dedicated modes in Decoders and split heavy operations if needed. Web Worker support can be added next for smoother UX.',
-  'overview.story.title': 'Why I Built This',
   'overview.story.body': 'This started as a personal pet project because I wanted a Base64 tool that feels fast and straightforward for everyday use. I keep it intentionally practical and add improvements gradually as new real use cases appear.',
 
   'encoder.mode.audio.label': 'Audio to Base64',
@@ -240,9 +237,6 @@ export const ru: Dictionary = {
   'overview.map.dataUrl.desc': 'Разбирайте payload, проверяйте метаданные и извлекайте чистые данные.',
   'overview.map.validator.title': 'Валидатор',
   'overview.map.validator.desc': 'Проверяйте символы, паддинг и проблемы нормализации.',
-  'overview.performance.title': 'Заметка о производительности',
-  'overview.performance.body': 'Для очень больших payload используйте специализированные режимы в декодере и разделяйте тяжелые операции. Поддержка Web Worker сделает UX еще плавнее.',
-  'overview.story.title': 'Зачем я это сделал',
   'overview.story.body': 'Это началось как личный pet-проект: хотелось быстрый и практичный инструмент Base64 для повседневных задач. Улучшения добавляются по мере появления реальных кейсов.',
 
   'encoder.mode.audio.label': 'Аудио в Base64',
@@ -431,9 +425,6 @@ export const uk: Dictionary = {
   'overview.map.decoders.desc': 'Підходить, коли у вас вже є Base64 і потрібен результат.',
   'overview.map.dataUrl.desc': 'Розбирайте payload, перевіряйте метадані та витягуйте чистий вміст.',
   'overview.map.validator.desc': 'Перевіряйте символи, падінг і проблеми нормалізації.',
-  'overview.performance.title': 'Нотатка про продуктивність',
-  'overview.performance.body': 'Для дуже великих payload використовуйте спеціалізовані режими в декодері та діліть важкі операції. Підтримка Web Worker зробить UX ще плавнішим.',
-  'overview.story.title': 'Навіщо я це зробив',
   'overview.story.body': 'Це почалось як особистий pet-проєкт: хотілося швидкий і практичний Base64-інструмент для щоденних задач. Покращення додаються в міру появи реальних кейсів.',
 
   'encoder.mode.audio.label': 'Аудіо в Base64',
