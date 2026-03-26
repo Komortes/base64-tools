@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { DecoderInputCard } from '../components/decoders/DecoderInputCard'
 import { DecoderOutputCard } from '../components/decoders/DecoderOutputCard'
 import { ModeSelector } from '../components/codec/ModeSelector'
@@ -17,10 +16,12 @@ export function DecodersPage() {
     input,
     mimeOverride,
     isDecoding,
+    isOutputProcessing,
     result,
     mismatchWarning,
     parsedUrl,
     error,
+    outputRevision,
     setInput,
     setMimeOverride,
     handleTypeChange,
@@ -29,20 +30,13 @@ export function DecodersPage() {
     clearAll,
   } = useDecodersState()
 
-  useEffect(() => {
-    if (!error) {
-      return
-    }
-
-    pushToast({ kind: 'error', message: error })
-  }, [error, pushToast])
-
   const handleCopyTextResult = async () => {
     const success = await copyTextResult()
-    pushToast({
-      kind: success ? 'success' : 'error',
-      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
-    })
+    if (!success) {
+      pushToast({ kind: 'error', message: t('toast.copyError') })
+    }
+
+    return success
   }
 
   const handleDownloadResult = (blob: Blob, filename: string) => {
@@ -84,6 +78,9 @@ export function DecodersPage() {
         onSwitchSuggestedKind={handleTypeChange}
         onDownloadResult={handleDownloadResult}
         onCopyTextResult={handleCopyTextResult}
+        error={error}
+        isProcessing={isOutputProcessing}
+        outputRevision={outputRevision}
       />
     </section>
   )

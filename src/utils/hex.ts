@@ -1,19 +1,19 @@
-function normalizeHexInput(input: string): string {
-  return input
+export function hexToBytes(input: string): Uint8Array {
+  const normalized = input
     .trim()
     .replace(/0x/gi, '')
-    .replace(/[^a-fA-F0-9]/g, '')
-}
-
-export function hexToBytes(input: string): Uint8Array {
-  const normalized = normalizeHexInput(input)
+    .replace(/\s+/g, '')
 
   if (!normalized.length) {
-    throw new Error('Hex input is empty.')
+    throw new Error('HEX_EMPTY')
+  }
+
+  if (/[^a-fA-F0-9]/.test(normalized)) {
+    throw new Error('HEX_INVALID')
   }
 
   if (normalized.length % 2 !== 0) {
-    throw new Error('Hex length must be even.')
+    throw new Error('HEX_ODD_LENGTH')
   }
 
   const bytes = new Uint8Array(normalized.length / 2)

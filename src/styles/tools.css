@@ -126,6 +126,7 @@
 .message.error {
   background: var(--danger-bg);
   color: var(--danger-fg);
+  border: 1px solid color-mix(in oklab, var(--danger-fg) 26%, #fff 74%);
 }
 
 .meta-grid {
@@ -180,6 +181,7 @@
   font-size: 0.86rem;
   white-space: pre-wrap;
   word-break: break-word;
+  transition: opacity 120ms ease;
 }
 
 .field-label {
@@ -260,6 +262,17 @@
   gap: 0.7rem;
 }
 
+.source-card:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--line) 70%);
+  box-shadow: 0 10px 24px rgba(15, 52, 86, 0.1);
+  background: color-mix(in oklab, var(--panel-soft) 88%, var(--accent) 12%);
+}
+
+.output-card:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 22%, var(--line) 78%);
+  box-shadow: 0 8px 18px rgba(15, 52, 86, 0.08);
+}
+
 .workbench-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -271,10 +284,15 @@
 .output-card {
   align-content: start;
   min-height: 0;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
 .output-card textarea {
   min-height: 320px;
+}
+
+.output-card.is-invalid {
+  border-color: color-mix(in oklab, var(--danger-fg) 22%, var(--line) 78%);
 }
 
 .output-title {
@@ -282,6 +300,141 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
+}
+
+.output-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0.12rem 0.58rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-1);
+  background: color-mix(in oklab, var(--panel) 76%, var(--accent) 12%);
+  border: 1px solid color-mix(in oklab, var(--line) 74%, var(--accent) 26%);
+}
+
+.output-state-panel {
+  min-height: 180px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--panel) 88%, var(--bg-1) 12%);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  color: var(--text-2);
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.output-state-panel.is-invalid {
+  border-color: color-mix(in oklab, var(--danger-fg) 28%, var(--line) 72%);
+  background: color-mix(in oklab, var(--danger-bg) 84%, var(--panel) 16%);
+  color: var(--danger-fg);
+}
+
+.output-textarea-wrap,
+.text-preview-shell {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--panel) 92%, var(--bg-1) 8%);
+  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.output-textarea-wrap.is-invalid {
+  border-color: color-mix(in oklab, var(--danger-fg) 28%, var(--line) 72%);
+  background: color-mix(in oklab, var(--danger-bg) 84%, var(--panel) 16%);
+}
+
+.output-textarea-wrap.is-processing .output-textarea,
+.text-preview-shell.is-processing .text-preview {
+  opacity: 0.72;
+}
+
+.output-textarea-wrap.is-refreshing .output-textarea,
+.text-preview-shell.is-refreshing .text-preview,
+.output-state-panel.is-refreshing {
+  animation: output-refresh 110ms ease;
+}
+
+.output-textarea-wrap.is-copied,
+.text-preview-shell.is-copied {
+  border-color: color-mix(in oklab, var(--accent) 34%, var(--line) 66%);
+  background: color-mix(in oklab, var(--panel) 80%, var(--accent) 20%);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 18%, transparent 82%);
+}
+
+.output-textarea {
+  min-height: 320px;
+  padding: 2.2rem 3.4rem 0.9rem 0.9rem;
+  background: transparent;
+  border: 0;
+}
+
+.output-textarea::placeholder {
+  color: transparent;
+}
+
+.output-overlay {
+  position: absolute;
+  left: 0.9rem;
+  right: 3.4rem;
+  top: 2.2rem;
+  bottom: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  white-space: pre-wrap;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 100ms ease, transform 100ms ease;
+}
+
+.output-overlay.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.output-placeholder {
+  color: var(--text-2);
+}
+
+.output-feedback {
+  color: var(--danger-fg);
+}
+
+.output-copy-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 9px;
+  background: color-mix(in oklab, var(--panel) 72%, var(--accent) 12%);
+  color: var(--text-1);
+  opacity: 0.54;
+  z-index: 1;
+}
+
+.output-copy-button:hover:not(:disabled),
+.output-copy-button:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.output-copy-button:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.output-copy-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .warning-tag {
@@ -403,6 +556,11 @@
 .validator-highlight-wrap {
   display: grid;
   gap: 0.35rem;
+}
+
+.text-preview-shell .text-preview {
+  padding-top: 2.35rem;
+  padding-right: 3.2rem;
 }
 
 .validator-highlight {

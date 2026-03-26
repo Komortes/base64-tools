@@ -22,6 +22,7 @@ interface EncoderSourceCardProps {
   onToggleDataUrlPrefix: () => void
   onEncode: () => Promise<void>
   onClear: () => void
+  sourceError: string
 }
 
 export function EncoderSourceCard({
@@ -44,6 +45,7 @@ export function EncoderSourceCard({
   onToggleDataUrlPrefix,
   onEncode,
   onClear,
+  sourceError,
 }: EncoderSourceCardProps) {
   const { t } = useI18n()
 
@@ -161,6 +163,12 @@ export function EncoderSourceCard({
           {t('encoders.action.clear')}
         </button>
       </div>
+
+      {sourceError && (
+        <p className="message error" role="alert">
+          {sourceError}
+        </p>
+      )}
 
       {(loadingRemoteFile || isEncoding) && (
         <div className="inline-loader" role="status" aria-live="polite">

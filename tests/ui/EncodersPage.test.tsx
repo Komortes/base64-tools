@@ -13,13 +13,12 @@ describe('EncodersPage', () => {
     vi.unstubAllGlobals()
   })
 
-  test('clears encoded output when the source input changes', async () => {
+  test('keeps previous output stable until debounced text re-encode completes', async () => {
     render(<EncodersPage />)
 
     fireEvent.change(screen.getByPlaceholderText('Paste plain text.'), {
       target: { value: 'Hello' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Encode to Base64' }))
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Encoded Base64 will appear here')).toHaveValue('SGVsbG8=')
@@ -29,23 +28,23 @@ describe('EncodersPage', () => {
       target: { value: 'Hello!' },
     })
 
-    expect(screen.getByPlaceholderText('Encoded Base64 will appear here')).toHaveValue('')
+    expect(screen.getByPlaceholderText('Encoded Base64 will appear here')).toHaveValue('SGVsbG8=')
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Encoded Base64 will appear here')).toHaveValue('SGVsbG8h')
+    })
   })
 
-  test('clears stale output before a failed encode attempt', async () => {
+  test('shows inline hex error inside the output block', async () => {
     render(<EncodersPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Hex to Base64' }))
     fireEvent.change(screen.getByPlaceholderText('Paste hex string, e.g. 48 65 6c 6c 6f'), {
       target: { value: 'zz' },
     })
-    fireEvent.change(screen.getByPlaceholderText('Encoded Base64 will appear here'), {
-      target: { value: 'stale output' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Encode to Base64' }))
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Encoded Base64 will appear here')).toHaveValue('')
+      expect(screen.getByText('Hex input contains invalid characters.')).toBeInTheDocument()
     })
   })
 

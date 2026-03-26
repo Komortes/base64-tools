@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { DecodedPreview } from '../DecodedPreview'
 import type { DecoderKind } from '../../configs/decoders'
 import { bytesToSize } from '../../utils/blob'
@@ -8,9 +9,12 @@ interface DecoderOutputCardProps {
   result: DecodeResult | null
   mismatchWarning: DecodeMismatchWarning | null
   parsedUrl: string | null
+  error: string
+  isProcessing: boolean
+  outputRevision: number
   onSwitchSuggestedKind: (kind: DecoderKind) => void
   onDownloadResult: (blob: Blob, filename: string) => void
-  onCopyTextResult: () => Promise<void> | void
+  onCopyTextResult: () => Promise<boolean>
 }
 
 function inputModeLabel(mode: DecodeResult['inputMode'], t: (key: string) => string): string {
@@ -23,14 +27,33 @@ export function DecoderOutputCard({
   result,
   mismatchWarning,
   parsedUrl,
+  error,
+  isProcessing,
+  outputRevision,
   onSwitchSuggestedKind,
   onDownloadResult,
   onCopyTextResult,
 }: DecoderOutputCardProps) {
   const { t } = useI18n()
+  const [isCopied, setIsCopied] = useState(false)
+
+  const handleCopy = async () => {
+    const success = await onCopyTextResult()
+    if (!success) {
+      return
+    }
+
+    setIsCopied(true)
+    globalThis.setTimeout(() => {
+      setIsCopied(false)
+    }, 650)
+  }
+
+  const hasTextPreview = result?.previewKind === 'text'
+  const copyLabel = isCopied ? t('common.copied') : t('decoders.action.copyText')
 
   return (
-    <article className="output-block output-card">
+    <article className={`output-block output-card${error ? ' is-invalid' : ''}`}>
       <h3 className="output-title">
         <span>{t('decoders.output.title')}</span>
         {mismatchWarning && (
@@ -43,9 +66,23 @@ export function DecoderOutputCard({
             <span>{t('decoders.output.switchTo', { label: mismatchWarning.suggestedLabel })}</span>
           </button>
         )}
+        {isProcessing && <span className="output-status">{t('decoders.output.updating')}</span>}
       </h3>
 
-      {!result && <p className="hint-text">{t('decoders.output.empty')}</p>}
+      {!result && (
+        <div
+          key={outputRevision}
+          className={`output-state-panel${
+            error ? ' is-invalid' : ''
+          }${
+            outputRevision > 0 ? ' is-refreshing' : ''
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          {error || t('decoders.output.empty')}
+        </div>
+      )}
 
       {result && (
         <>
@@ -60,26 +97,65 @@ export function DecoderOutputCard({
 
           {parsedUrl && (
             <p className="link-preview">
-              Parsed URL: <a href={parsedUrl} target="_blank" rel="noopener noreferrer">{parsedUrl}</a>
+              {t('decoders.parsedUrl')} <a href={parsedUrl} target="_blank" rel="noopener noreferrer">{parsedUrl}</a>
             </p>
           )}
 
-          <DecodedPreview
-            previewKind={result.previewKind}
-            objectUrl={result.objectUrl}
-            textPreview={result.textPreview}
-          />
+          {hasTextPreview ? (
+            <div
+              key={outputRevision}
+              className={`text-preview-shell${
+                outputRevision > 0 ? ' is-refreshing' : ''
+              }${
+                isCopied ? ' is-copied' : ''
+              }${
+                isProcessing ? ' is-processing' : ''
+              }`}
+            >
+              <button
+                type="button"
+                className="output-copy-button"
+                onClick={() => {
+                  void handleCopy()
+                }}
+                disabled={!result.textPreview}
+                aria-label={copyLabel}
+                title={copyLabel}
+              >
+                {isCopied ? <CheckIcon /> : <CopyIcon />}
+              </button>
+              <pre className="text-preview">{result.textPreview?.slice(0, 5000) ?? ''}</pre>
+            </div>
+          ) : (
+            <DecodedPreview
+              previewKind={result.previewKind}
+              objectUrl={result.objectUrl}
+              textPreview={result.textPreview}
+            />
+          )}
 
           <div className="button-row">
             <button onClick={() => onDownloadResult(result.blob, result.filename)}>{t('decoders.action.download')}</button>
-            {result.previewKind === 'text' && (
-              <button type="button" className="button-ghost" onClick={onCopyTextResult}>
-                {t('decoders.action.copyText')}
-              </button>
-            )}
           </div>
         </>
       )}
     </article>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="10" height="10" rx="2" />
+      <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
   )
 }

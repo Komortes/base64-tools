@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { EncoderOutputCard } from '../components/encoders/EncoderOutputCard'
 import { EncoderSourceCard } from '../components/encoders/EncoderSourceCard'
 import { ModeSelector } from '../components/codec/ModeSelector'
@@ -21,9 +20,12 @@ export function EncodersPage() {
     remoteFileUrl,
     loadingRemoteFile,
     isEncoding,
+    isOutputProcessing,
     base64Output,
     withDataUrlPrefix,
-    error,
+    sourceError,
+    outputError,
+    outputRevision,
     setTextInput,
     setHexInput,
     setFileInputMode,
@@ -39,20 +41,13 @@ export function EncodersPage() {
     clearAll,
   } = useEncodersState()
 
-  useEffect(() => {
-    if (!error) {
-      return
-    }
-
-    pushToast({ kind: 'error', message: error })
-  }, [error, pushToast])
-
   const handleCopyBase64 = async () => {
     const success = await copyBase64()
-    pushToast({
-      kind: success ? 'success' : 'error',
-      message: t(success ? 'toast.copySuccess' : 'toast.copyError'),
-    })
+    if (!success) {
+      pushToast({ kind: 'error', message: t('toast.copyError') })
+    }
+
+    return success
   }
 
   const handleDownloadBase64 = () => {
@@ -97,6 +92,7 @@ export function EncodersPage() {
         onToggleDataUrlPrefix={toggleWithDataUrlPrefix}
         onEncode={handleEncode}
         onClear={clearAll}
+        sourceError={sourceError}
       />
 
       <EncoderOutputCard
@@ -104,6 +100,9 @@ export function EncodersPage() {
         onBase64OutputChange={setBase64Output}
         onCopyBase64={handleCopyBase64}
         onDownloadBase64={handleDownloadBase64}
+        error={outputError}
+        isProcessing={isOutputProcessing}
+        outputRevision={outputRevision}
       />
     </section>
   )

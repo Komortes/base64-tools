@@ -21,11 +21,17 @@ export function decodeInputToBytes(input: string): DecodedInput {
     }
   }
 
-  const bytes = base64ToBytes(extracted.payload, {
-    stripWhitespace: true,
-    normalizeUrlSafe: true,
-    addPadding: true,
-  })
+  let bytes: Uint8Array
+
+  try {
+    bytes = base64ToBytes(extracted.payload, {
+      stripWhitespace: true,
+      normalizeUrlSafe: true,
+      addPadding: true,
+    })
+  } catch {
+    throw new Error('INVALID_BASE64')
+  }
 
   return {
     bytes,

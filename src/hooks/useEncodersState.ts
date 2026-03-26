@@ -12,10 +12,12 @@ import { copyToClipboard } from '../utils/clipboard'
 import { hexToBytes } from '../utils/hex'
 import { filenameFromUrl } from '../utils/urlFile'
 import { useI18n } from '../i18n/useI18n'
+import { useDebouncedValue } from './useDebouncedValue'
 
 const WORKER_THRESHOLD_BYTES = 512 * 1024
 const REMOTE_FILE_TIMEOUT_MS = 15_000
 const MAX_REMOTE_FILE_BYTES = 25 * 1024 * 1024
+const LIVE_RECOMPUTE_DELAY_MS = 160
 const REMOTE_FILE_PROTOCOLS = new Set(['http:', 'https:'])
 
 function parseRemoteFileUrl(input: string): URL | null {
@@ -29,6 +31,26 @@ function parseRemoteFileUrl(input: string): URL | null {
   } catch {
     return null
   }
+}
+
+function isLiveEncoderMode(config: EncoderConfig): boolean {
+  return config.mode === 'text' || config.mode === 'hex'
+}
+
+function translateEncodeError(message: string, t: (key: string) => string): string {
+  if (message === 'HEX_EMPTY') {
+    return t('encoders.error.hexEmpty')
+  }
+
+  if (message === 'HEX_INVALID') {
+    return t('encoders.error.hexInvalid')
+  }
+
+  if (message === 'HEX_ODD_LENGTH') {
+    return t('encoders.error.hexOddLength')
+  }
+
+  return message
 }
 
 async function readResponseBlobWithLimit(response: Response, maxBytes: number): Promise<Blob> {
@@ -87,9 +109,12 @@ interface EncodersStateValues {
   remoteFileUrl: string
   loadingRemoteFile: boolean
   isEncoding: boolean
+  isOutputProcessing: boolean
   base64Output: string
   withDataUrlPrefix: boolean
-  error: string
+  sourceError: string
+  outputError: string
+  outputRevision: number
 }
 
 interface EncodersStateActions {
@@ -122,59 +147,35 @@ export function useEncodersState(): UseEncodersStateResult {
   const [isEncoding, setIsEncoding] = useState(false)
   const [base64Output, setBase64OutputValue] = useState('')
   const [withDataUrlPrefix, setWithDataUrlPrefix] = useState(false)
-  const [error, setError] = useState('')
+  const [sourceError, setSourceError] = useState('')
+  const [outputError, setOutputError] = useState('')
+  const [outputRevision, setOutputRevision] = useState(0)
 
   const config = useMemo(
     () => ENCODER_CONFIGS.find((entry) => entry.kind === kind) ?? ENCODER_CONFIGS[0],
     [kind],
   )
 
-  const clearOutputAndMessages = () => {
-    setBase64OutputValue('')
-    setError('')
-  }
-
-  const resetMessages = () => {
-    setError('')
-  }
-
-  const setTextInput = (value: string) => {
-    clearOutputAndMessages()
-    setTextInputValue(value)
-  }
-
-  const setHexInput = (value: string) => {
-    clearOutputAndMessages()
-    setHexInputValue(value)
-  }
-
-  const setFileInputMode = (value: FileInputMode) => {
-    clearOutputAndMessages()
-    setFileInputModeValue(value)
-    setSelectedFileValue(null)
-    setRemoteFileUrlValue('')
-  }
-
-  const setSelectedFile = (file: File | null) => {
-    clearOutputAndMessages()
-    setSelectedFileValue(file)
-  }
-
-  const setRemoteFileUrl = (value: string) => {
-    clearOutputAndMessages()
-    setRemoteFileUrlValue(value)
-  }
-
-  const setBase64Output = (value: string) => {
-    setBase64OutputValue(value)
-  }
-
-  const toggleWithDataUrlPrefix = () => {
-    setBase64OutputValue('')
-    setWithDataUrlPrefix((prev) => !prev)
-  }
-
+  const liveMode = isLiveEncoderMode(config)
+  const liveInput = config.mode === 'hex' ? hexInput : textInput
+  const debouncedLiveInput = useDebouncedValue(liveInput, LIVE_RECOMPUTE_DELAY_MS)
+  const isOutputProcessing = isEncoding || (liveMode && liveInput !== debouncedLiveInput)
+  const activeRunIdRef = useRef(0)
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  const commitOutputState = useCallback((nextOutput: string, nextError: string) => {
+    setBase64OutputValue(nextOutput)
+    setOutputError(nextError)
+    setOutputRevision((prev) => prev + 1)
+  }, [])
+
+  const clearSourceError = useCallback(() => {
+    setSourceError('')
+  }, [])
+
+  const resetOutputState = useCallback(() => {
+    commitOutputState('', '')
+  }, [commitOutputState])
 
   const abortInflight = useCallback(() => {
     if (abortControllerRef.current) {
@@ -189,8 +190,178 @@ export function useEncodersState(): UseEncodersStateResult {
     }
   }, [abortInflight])
 
+  const runEncode = useCallback(
+    async (
+      mode: 'live' | 'manual',
+      inputOverride?: string,
+    ) => {
+      const runId = activeRunIdRef.current + 1
+      activeRunIdRef.current = runId
+
+      if (config.mode === 'file') {
+        clearSourceError()
+        resetOutputState()
+
+        const fileToEncode = selectedFile
+        if (!fileToEncode) {
+          setSourceError(t('encoders.error.chooseFile'))
+          return
+        }
+
+        setIsEncoding(true)
+
+        try {
+          let mime = config.defaultMime
+          const encoded = await blobToBase64(fileToEncode)
+
+          if (fileToEncode.type) {
+            mime = fileToEncode.type
+          }
+
+          const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
+          if (activeRunIdRef.current === runId) {
+            commitOutputState(output, '')
+          }
+        } catch (encodeError) {
+          if (activeRunIdRef.current !== runId) {
+            return
+          }
+
+          const message =
+            encodeError instanceof Error
+              ? translateEncodeError(encodeError.message, t)
+              : t('encoders.error.encodeFailed')
+          setSourceError(message)
+        } finally {
+          if (activeRunIdRef.current === runId) {
+            setIsEncoding(false)
+          }
+        }
+
+        return
+      }
+
+      const rawInput = inputOverride ?? ''
+      if (!rawInput.trim()) {
+        if (activeRunIdRef.current === runId) {
+          resetOutputState()
+          setIsEncoding(false)
+        }
+        return
+      }
+
+      clearSourceError()
+      setIsEncoding(true)
+
+      try {
+        const mime = config.defaultMime
+        let encoded = ''
+
+        if (config.mode === 'hex') {
+          const bytes = hexToBytes(rawInput)
+          encoded =
+            bytes.length >= WORKER_THRESHOLD_BYTES
+              ? await encodeBytesToBase64InWorker(bytes)
+              : bytesToBase64(bytes)
+        } else {
+          const bytes = new TextEncoder().encode(rawInput)
+          encoded =
+            bytes.length >= WORKER_THRESHOLD_BYTES
+              ? await encodeBytesToBase64InWorker(bytes)
+              : bytesToBase64(bytes)
+        }
+
+        const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
+        if (activeRunIdRef.current === runId) {
+          commitOutputState(output, '')
+        }
+      } catch (encodeError) {
+        if (activeRunIdRef.current !== runId) {
+          return
+        }
+
+        const message =
+          encodeError instanceof Error
+            ? translateEncodeError(encodeError.message, t)
+            : t('encoders.error.encodeFailed')
+
+        if (mode === 'manual') {
+          commitOutputState('', message)
+        } else {
+          commitOutputState('', message)
+        }
+      } finally {
+        if (activeRunIdRef.current === runId) {
+          setIsEncoding(false)
+        }
+      }
+    },
+    [
+      clearSourceError,
+      commitOutputState,
+      config,
+      resetOutputState,
+      selectedFile,
+      t,
+      withDataUrlPrefix,
+    ],
+  )
+
+  useEffect(() => {
+    if (!liveMode) {
+      return
+    }
+
+    void runEncode('live', debouncedLiveInput)
+  }, [debouncedLiveInput, liveMode, runEncode, withDataUrlPrefix])
+
+  const setTextInput = (value: string) => {
+    clearSourceError()
+    setTextInputValue(value)
+  }
+
+  const setHexInput = (value: string) => {
+    clearSourceError()
+    setHexInputValue(value)
+  }
+
+  const setFileInputMode = (value: FileInputMode) => {
+    clearSourceError()
+    resetOutputState()
+    setFileInputModeValue(value)
+    setSelectedFileValue(null)
+    setRemoteFileUrlValue('')
+  }
+
+  const setSelectedFile = (file: File | null) => {
+    clearSourceError()
+    resetOutputState()
+    setSelectedFileValue(file)
+  }
+
+  const setRemoteFileUrl = (value: string) => {
+    clearSourceError()
+    resetOutputState()
+    setRemoteFileUrlValue(value)
+  }
+
+  const setBase64Output = (value: string) => {
+    setBase64OutputValue(value)
+    setOutputError('')
+  }
+
+  const toggleWithDataUrlPrefix = () => {
+    clearSourceError()
+    if (!liveMode) {
+      resetOutputState()
+    }
+    setWithDataUrlPrefix((prev) => !prev)
+  }
+
   const handleTypeChange = (nextType: EncoderKind) => {
     abortInflight()
+    activeRunIdRef.current += 1
+    setIsEncoding(false)
     setKind(nextType)
     setTextInputValue('')
     setHexInputValue('')
@@ -198,24 +369,25 @@ export function useEncodersState(): UseEncodersStateResult {
     setSelectedFileValue(null)
     setRemoteFileUrlValue('')
     setLoadingRemoteFile(false)
-    setBase64OutputValue('')
     setWithDataUrlPrefix(false)
-    resetMessages()
+    setSourceError('')
+    resetOutputState()
   }
 
   const handleLoadFromUrl = async () => {
-    clearOutputAndMessages()
+    clearSourceError()
+    resetOutputState()
 
     const parsedRemoteUrl = parseRemoteFileUrl(remoteFileUrl)
     if (!parsedRemoteUrl) {
       setSelectedFileValue(null)
-      setError('Enter a valid HTTP(S) file URL first.')
+      setSourceError(t('encoders.error.enterUrlFirst'))
       return
     }
 
     if (config.mode !== 'file') {
       setSelectedFileValue(null)
-      setError(t('encoders.error.urlOnlyForFiles'))
+      setSourceError(t('encoders.error.urlOnlyForFiles'))
       return
     }
 
@@ -251,9 +423,9 @@ export function useEncodersState(): UseEncodersStateResult {
         timedOut
           ? `Request timed out after ${Math.round(REMOTE_FILE_TIMEOUT_MS / 1000)} seconds.`
           : loadError instanceof Error
-          ? loadError.message
-          : t('encoders.error.failedLoadUrl')
-      setError(t('encoders.error.loadByUrl', { message }))
+            ? loadError.message
+            : t('encoders.error.failedLoadUrl')
+      setSourceError(t('encoders.error.loadByUrl', { message }))
     } finally {
       globalThis.clearTimeout(timeoutId)
       if (abortControllerRef.current === abortController) {
@@ -264,52 +436,7 @@ export function useEncodersState(): UseEncodersStateResult {
   }
 
   const handleEncode = async () => {
-    resetMessages()
-    setBase64OutputValue('')
-
-    if (config.mode === 'file' && !selectedFile) {
-      setError(t('encoders.error.chooseFile'))
-      return
-    }
-
-    setIsEncoding(true)
-
-    try {
-      let mime = config.defaultMime
-      let encoded = ''
-
-      if (config.mode === 'file') {
-        const fileToEncode = selectedFile
-        if (!fileToEncode) {
-          throw new Error(t('encoders.error.chooseFile'))
-        }
-
-        encoded = await blobToBase64(fileToEncode)
-        if (fileToEncode.type) {
-          mime = fileToEncode.type
-        }
-      } else if (config.mode === 'hex') {
-        const bytes = hexToBytes(hexInput)
-        encoded =
-          bytes.length >= WORKER_THRESHOLD_BYTES
-            ? await encodeBytesToBase64InWorker(bytes)
-            : bytesToBase64(bytes)
-      } else {
-        const bytes = new TextEncoder().encode(textInput)
-        encoded =
-          bytes.length >= WORKER_THRESHOLD_BYTES
-            ? await encodeBytesToBase64InWorker(bytes)
-            : bytesToBase64(bytes)
-      }
-
-      const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
-      setBase64OutputValue(output)
-    } catch (encodeError) {
-      const message = encodeError instanceof Error ? encodeError.message : t('encoders.error.encodeFailed')
-      setError(message)
-    } finally {
-      setIsEncoding(false)
-    }
+    await runEncode('manual', liveInput)
   }
 
   const copyBase64 = async () => copyToClipboard(base64Output)
@@ -321,13 +448,15 @@ export function useEncodersState(): UseEncodersStateResult {
 
   const clearAll = () => {
     abortInflight()
+    activeRunIdRef.current += 1
+    setIsEncoding(false)
     setTextInputValue('')
     setHexInputValue('')
     setSelectedFileValue(null)
     setRemoteFileUrlValue('')
-    setBase64OutputValue('')
     setWithDataUrlPrefix(false)
-    resetMessages()
+    setSourceError('')
+    resetOutputState()
   }
 
   return {
@@ -340,9 +469,12 @@ export function useEncodersState(): UseEncodersStateResult {
     remoteFileUrl,
     loadingRemoteFile,
     isEncoding,
+    isOutputProcessing,
     base64Output,
     withDataUrlPrefix,
-    error,
+    sourceError,
+    outputError,
+    outputRevision,
     setTextInput,
     setHexInput,
     setFileInputMode,
