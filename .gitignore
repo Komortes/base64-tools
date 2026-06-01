@@ -20,6 +20,10 @@ test-results
 .env.*
 !.env.example
 
+# Brainstorming/planning artifacts
+.superpowers/
+docs/superpowers/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

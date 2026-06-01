@@ -95,11 +95,12 @@ export function useDecodersState(): UseDecodersStateResult {
 
   const { revokeObjectUrl, setObjectUrl } = useObjectUrlLifecycle()
   const config = DECODER_CONFIGS.find((entry) => entry.kind === kind) ?? DECODER_CONFIGS[0]
-  const debouncedPayload = useDebouncedValue({ input, mimeOverride }, LIVE_RECOMPUTE_DELAY_MS)
+  const debouncedInput = useDebouncedValue(input, LIVE_RECOMPUTE_DELAY_MS)
+  const debouncedMimeOverride = useDebouncedValue(mimeOverride, LIVE_RECOMPUTE_DELAY_MS)
   const isOutputProcessing =
     isDecoding ||
-    input !== debouncedPayload.input ||
-    mimeOverride !== debouncedPayload.mimeOverride
+    input !== debouncedInput ||
+    mimeOverride !== debouncedMimeOverride
   const activeRunIdRef = useRef(0)
 
   const parsedUrl = useMemo(
@@ -242,8 +243,8 @@ export function useDecodersState(): UseDecodersStateResult {
   )
 
   useEffect(() => {
-    void runDecode(debouncedPayload.input, debouncedPayload.mimeOverride)
-  }, [debouncedPayload, kind, runDecode])
+    void runDecode(debouncedInput, debouncedMimeOverride)
+  }, [debouncedInput, debouncedMimeOverride, kind, runDecode])
 
   const setInput = (value: string) => {
     setInputValue(value)

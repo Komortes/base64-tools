@@ -25,12 +25,14 @@ export function hexToBytes(input: string): Uint8Array {
   return bytes
 }
 
+const HEX_LUT: string[] = Array.from({ length: 256 }, (_, i) =>
+  i.toString(16).padStart(2, '0'),
+)
+
 export function bytesToHex(bytes: Uint8Array, withSpaces = true): string {
-  const pairs: string[] = []
-
-  for (let i = 0; i < bytes.length; i += 1) {
-    pairs.push(bytes[i].toString(16).padStart(2, '0'))
+  const parts = new Array<string>(bytes.length)
+  for (let i = 0; i < bytes.length; i++) {
+    parts[i] = HEX_LUT[bytes[i]]
   }
-
-  return withSpaces ? pairs.join(' ') : pairs.join('')
+  return withSpaces ? parts.join(' ') : parts.join('')
 }

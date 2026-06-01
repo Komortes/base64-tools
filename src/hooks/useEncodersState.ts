@@ -53,6 +53,12 @@ function translateEncodeError(message: string, t: (key: string) => string): stri
   return message
 }
 
+async function encodeBytes(bytes: Uint8Array): Promise<string> {
+  return bytes.length >= WORKER_THRESHOLD_BYTES
+    ? encodeBytesToBase64InWorker(bytes)
+    : bytesToBase64(bytes)
+}
+
 async function readResponseBlobWithLimit(response: Response, maxBytes: number): Promise<Blob> {
   const contentType = response.headers.get('content-type') || ''
   const contentLengthHeader = response.headers.get('content-length')
@@ -162,6 +168,7 @@ export function useEncodersState(): UseEncodersStateResult {
   const isOutputProcessing = isEncoding || (liveMode && liveInput !== debouncedLiveInput)
   const activeRunIdRef = useRef(0)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const lastFileEncodeRef = useRef<{ base64: string; mime: string } | null>(null)
 
   const commitOutputState = useCallback((nextOutput: string, nextError: string) => {
     setBase64OutputValue(nextOutput)
@@ -191,10 +198,7 @@ export function useEncodersState(): UseEncodersStateResult {
   }, [abortInflight])
 
   const runEncode = useCallback(
-    async (
-      mode: 'live' | 'manual',
-      inputOverride?: string,
-    ) => {
+    async (inputOverride?: string) => {
       const runId = activeRunIdRef.current + 1
       activeRunIdRef.current = runId
 
@@ -220,6 +224,7 @@ export function useEncodersState(): UseEncodersStateResult {
 
           const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
           if (activeRunIdRef.current === runId) {
+            lastFileEncodeRef.current = { base64: encoded, mime }
             commitOutputState(output, '')
           }
         } catch (encodeError) {
@@ -258,17 +263,9 @@ export function useEncodersState(): UseEncodersStateResult {
         let encoded = ''
 
         if (config.mode === 'hex') {
-          const bytes = hexToBytes(rawInput)
-          encoded =
-            bytes.length >= WORKER_THRESHOLD_BYTES
-              ? await encodeBytesToBase64InWorker(bytes)
-              : bytesToBase64(bytes)
+          encoded = await encodeBytes(hexToBytes(rawInput))
         } else {
-          const bytes = new TextEncoder().encode(rawInput)
-          encoded =
-            bytes.length >= WORKER_THRESHOLD_BYTES
-              ? await encodeBytesToBase64InWorker(bytes)
-              : bytesToBase64(bytes)
+          encoded = await encodeBytes(new TextEncoder().encode(rawInput))
         }
 
         const output = withDataUrlPrefix ? `data:${mime};base64,${encoded}` : encoded
@@ -285,11 +282,7 @@ export function useEncodersState(): UseEncodersStateResult {
             ? translateEncodeError(encodeError.message, t)
             : t('encoders.error.encodeFailed')
 
-        if (mode === 'manual') {
-          commitOutputState('', message)
-        } else {
-          commitOutputState('', message)
-        }
+        commitOutputState('', message)
       } finally {
         if (activeRunIdRef.current === runId) {
           setIsEncoding(false)
@@ -312,7 +305,7 @@ export function useEncodersState(): UseEncodersStateResult {
       return
     }
 
-    void runEncode('live', debouncedLiveInput)
+    void runEncode(debouncedLiveInput)
   }, [debouncedLiveInput, liveMode, runEncode, withDataUrlPrefix])
 
   const setTextInput = (value: string) => {
@@ -352,7 +345,14 @@ export function useEncodersState(): UseEncodersStateResult {
 
   const toggleWithDataUrlPrefix = () => {
     clearSourceError()
-    if (!liveMode) {
+    const stored = lastFileEncodeRef.current
+    if (!liveMode && stored) {
+      const nextPrefix = !withDataUrlPrefix
+      const newOutput = nextPrefix
+        ? `data:${stored.mime};base64,${stored.base64}`
+        : stored.base64
+      commitOutputState(newOutput, '')
+    } else if (!liveMode) {
       resetOutputState()
     }
     setWithDataUrlPrefix((prev) => !prev)
@@ -361,6 +361,7 @@ export function useEncodersState(): UseEncodersStateResult {
   const handleTypeChange = (nextType: EncoderKind) => {
     abortInflight()
     activeRunIdRef.current += 1
+    lastFileEncodeRef.current = null
     setIsEncoding(false)
     setKind(nextType)
     setTextInputValue('')
@@ -436,7 +437,7 @@ export function useEncodersState(): UseEncodersStateResult {
   }
 
   const handleEncode = async () => {
-    await runEncode('manual', liveInput)
+    await runEncode(liveInput)
   }
 
   const copyBase64 = async () => copyToClipboard(base64Output)
@@ -449,6 +450,7 @@ export function useEncodersState(): UseEncodersStateResult {
   const clearAll = () => {
     abortInflight()
     activeRunIdRef.current += 1
+    lastFileEncodeRef.current = null
     setIsEncoding(false)
     setTextInputValue('')
     setHexInputValue('')

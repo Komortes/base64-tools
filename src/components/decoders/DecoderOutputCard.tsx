@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DecodedPreview } from '../DecodedPreview'
+import { CheckIcon, CopyIcon } from '../icons'
 import type { DecoderKind } from '../../configs/decoders'
 import { bytesToSize } from '../../utils/blob'
 import type { DecodeMismatchWarning, DecodeResult } from '../../hooks/useDecodersState'
@@ -49,7 +50,7 @@ export function DecoderOutputCard({
     }, 650)
   }
 
-  const hasTextPreview = result?.previewKind === 'text'
+  const hasTextPreview = result?.previewKind === 'text' && result?.textPreview !== null
   const copyLabel = isCopied ? t('common.copied') : t('decoders.action.copyText')
 
   return (
@@ -143,19 +144,3 @@ export function DecoderOutputCard({
   )
 }
 
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="9" y="9" width="10" height="10" rx="2" />
-      <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
-}
