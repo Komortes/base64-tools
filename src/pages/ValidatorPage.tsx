@@ -219,38 +219,40 @@ export function ValidatorPage() {
         <p>{t('validator.subtitle')}</p>
       </div>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={stripWhitespace}
-          onChange={(event) => setStripWhitespace(event.target.checked)}
+      <article className="preview-card source-card">
+        <label>
+          <input
+            type="checkbox"
+            checked={stripWhitespace}
+            onChange={(event) => setStripWhitespace(event.target.checked)}
+          />
+          {t('validator.ignoreWhitespace')}
+        </label>
+
+        <textarea
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          rows={9}
+          placeholder={t('validator.input.placeholder')}
         />
-        {t('validator.ignoreWhitespace')}
-      </label>
 
-      <textarea
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-        rows={9}
-        placeholder={t('validator.input.placeholder')}
-      />
-
-      {!!input && (
-        <div className="button-row">
-          <button type="button" className="button-ghost" onClick={fixPadding}>
-            {t('validator.action.fixPadding')}
-          </button>
-          <button type="button" className="button-ghost" onClick={convertToUrlSafe}>
-            {t('validator.action.convertUrlSafe')}
-          </button>
-          <button type="button" className="button-ghost" onClick={removeWhitespace}>
-            {t('validator.action.removeWhitespace')}
-          </button>
-          <button type="button" className="button-ghost" onClick={applyNormalized}>
-            {t('validator.action.applyNormalized')}
-          </button>
-        </div>
-      )}
+        {!!input && (
+          <div className="button-row">
+            <button type="button" className="button-ghost" onClick={fixPadding}>
+              {t('validator.action.fixPadding')}
+            </button>
+            <button type="button" className="button-ghost" onClick={convertToUrlSafe}>
+              {t('validator.action.convertUrlSafe')}
+            </button>
+            <button type="button" className="button-ghost" onClick={removeWhitespace}>
+              {t('validator.action.removeWhitespace')}
+            </button>
+            <button type="button" className="button-ghost" onClick={applyNormalized}>
+              {t('validator.action.applyNormalized')}
+            </button>
+          </div>
+        )}
+      </article>
 
       {!!input && (
         <div className="preview-card">

@@ -51,6 +51,21 @@ const LOCALE_OPTIONS: Array<{ id: Locale; labelKey: string }> = [
   { id: 'uk', labelKey: 'app.language.uk' },
 ]
 
+function ThemeSwatch({ id }: { id: ThemePack }) {
+  const palettes: Record<ThemePack, { sidebar: string; accent: string }> = {
+    atlas:    { sidebar: 'linear-gradient(160deg, #133f67, #103454)', accent: '#0f6ea3' },
+    terminal: { sidebar: 'linear-gradient(160deg, #091811, #050d0a)', accent: '#23b36b' },
+    sunset:   { sidebar: 'linear-gradient(160deg, #7c2f22, #5c1f16)', accent: '#ec8b43' },
+  }
+  const { sidebar, accent } = palettes[id]
+  return (
+    <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '26px', height: '22px' }}>
+      <span style={{ flex: 1, borderRadius: '3px', background: sidebar }} />
+      <span style={{ height: '5px', borderRadius: '2px', background: accent }} />
+    </span>
+  )
+}
+
 function App() {
   const { locale, setLocale, t } = useI18n()
   const theme = usePreferencesStore((state) => state.theme)
@@ -136,7 +151,7 @@ function App() {
                 aria-label={t(option.labelKey)}
                 onClick={() => setTheme(option.id)}
               >
-                {option.id === 'atlas' ? 'A' : option.id === 'terminal' ? 'T' : 'S'}
+                <ThemeSwatch id={option.id} />
               </button>
             ))}
           </div>

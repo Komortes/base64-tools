@@ -155,14 +155,16 @@ export function DataUrlToolsPage() {
         <p>{t('dataUrl.subtitle')}</p>
       </div>
 
-      <textarea
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-        rows={8}
-        placeholder={t('dataUrl.input.placeholder')}
-      />
+      <article className="preview-card source-card">
+        <textarea
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          rows={8}
+          placeholder={t('dataUrl.input.placeholder')}
+        />
 
-      {!parsed && input.trim() && <p className="message error" role="alert">{t('dataUrl.error.invalidFormat')}</p>}
+        {!parsed && input.trim() && <p className="message error" role="alert">{t('dataUrl.error.invalidFormat')}</p>}
+      </article>
 
       {parsed && (
         <div className="preview-card">
