@@ -66,6 +66,8 @@ Default local URL: `http://localhost:5173`
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Node version: `22` (recommended)
+- Set `SITE_URL` to the public origin, for example `https://base64-tools.pages.dev`.
+  The build uses it to generate `sitemap.xml` and the sitemap entry in `robots.txt`.
 
 ## Project Structure
 

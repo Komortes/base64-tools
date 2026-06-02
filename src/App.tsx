@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Navigate, NavLink, Route, Routes } from 'react-router'
+import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router'
 import { useI18n } from './i18n/useI18n'
 import { DataUrlToolsPage } from './pages/DataUrlToolsPage'
 import { DecodersPage } from './pages/DecodersPage'
@@ -51,6 +51,53 @@ const LOCALE_OPTIONS: Array<{ id: Locale; labelKey: string }> = [
   { id: 'uk', labelKey: 'app.language.uk' },
 ]
 
+const SEO_BY_PATH: Record<string, { title: string; description: string }> = {
+  '/overview': {
+    title: 'Base64 Tools - Encode, Decode, Validate',
+    description: 'Fast browser-based Base64 tools for encoding, decoding, validating, and working with Data URLs. All processing runs locally in your browser.',
+  },
+  '/encoders': {
+    title: 'Base64 Encoder - Text, Files, Images, PDF, URL',
+    description: 'Encode text, files, images, PDFs, video, audio, HTML, CSS, URLs, and hex data to Base64 directly in your browser.',
+  },
+  '/decoders': {
+    title: 'Base64 Decoder - Text, Files, Media, Data URLs',
+    description: 'Decode Base64 and Data URL payloads into text, files, images, PDFs, audio, video, HTML, CSS, URLs, and hex output.',
+  },
+  '/tools/data-url': {
+    title: 'Data URL Tools - Parse, Preview, Extract Payloads',
+    description: 'Parse Data URLs, inspect MIME metadata, preview supported payloads, copy clean content, and download decoded data.',
+  },
+  '/tools/validator': {
+    title: 'Base64 Validator - Check Padding, Alphabet, Length',
+    description: 'Validate Base64 strings, find invalid characters, check padding, normalize whitespace, and convert URL-safe payloads.',
+  },
+}
+
+function setMeta(name: string, content: string, attribute: 'name' | 'property' = 'name') {
+  let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`)
+
+  if (!element) {
+    element = document.createElement('meta')
+    element.setAttribute(attribute, name)
+    document.head.appendChild(element)
+  }
+
+  element.content = content
+}
+
+function setLink(rel: string, href: string) {
+  let element = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)
+
+  if (!element) {
+    element = document.createElement('link')
+    element.rel = rel
+    document.head.appendChild(element)
+  }
+
+  element.href = href
+}
+
 function ThemeSwatch({ id }: { id: ThemePack }) {
   const palettes: Record<ThemePack, { sidebar: string; accent: string }> = {
     atlas:    { sidebar: 'linear-gradient(160deg, #133f67, #103454)', accent: '#0f6ea3' },
@@ -68,12 +115,34 @@ function ThemeSwatch({ id }: { id: ThemePack }) {
 
 function App() {
   const { locale, setLocale, t } = useI18n()
+  const location = useLocation()
   const theme = usePreferencesStore((state) => state.theme)
   const setTheme = usePreferencesStore((state) => state.setTheme)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
+
+  useEffect(() => {
+    const path = location.pathname === '/' ? '/overview' : location.pathname
+    const metadata = SEO_BY_PATH[path] ?? SEO_BY_PATH['/overview']
+    const canonicalPath = SEO_BY_PATH[path] ? path : '/overview'
+    const canonicalUrl = `${window.location.origin}${canonicalPath}`
+
+    document.title = metadata.title
+    setMeta('description', metadata.description)
+    setMeta('robots', 'index, follow')
+    setMeta('og:title', metadata.title, 'property')
+    setMeta('og:description', metadata.description, 'property')
+    setMeta('og:url', canonicalUrl, 'property')
+    setMeta('twitter:title', metadata.title)
+    setMeta('twitter:description', metadata.description)
+    setLink('canonical', canonicalUrl)
+  }, [location.pathname])
 
   const navSections = [
     {
